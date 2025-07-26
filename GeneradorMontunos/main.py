@@ -502,7 +502,7 @@ def generar(
             seg_cor = int(round(pm.get_end_time() / grid_seg))
             start = start_cor * (60.0 / cur_bpm / 2)
             for n in pm.instruments[0].notes:
-                if n.pitch == 0:
+                if n.pitch in (0, 21):
                     continue
                 notas_finales.append(
                     pretty_midi.Note(
@@ -517,15 +517,29 @@ def generar(
 
     grid = 60.0 / cur_bpm / 2
     final_offset = max_cor * grid
-    if final_offset > 0:
-        notas_finales.append(
-            pretty_midi.Note(
-                velocity=1,
-                pitch=0,
-                start=max(0.0, final_offset - grid),
-                end=final_offset,
-            )
+    if final_offset > 0 and not return_pm:
+        has_start = any(n.start <= 0 < n.end and n.pitch > 0 for n in notas_finales)
+        has_end = any(
+            n.pitch > 0 and n.start < final_offset and n.end > final_offset - grid for n in notas_finales
         )
+        if not has_start:
+            notas_finales.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=0,
+                    start=0.0,
+                    end=min(grid, final_offset),
+                )
+            )
+        if not has_end:
+            notas_finales.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=0,
+                    start=max(0.0, final_offset - grid),
+                    end=final_offset,
+                )
+            )
 
     pm_out = pretty_midi.PrettyMIDI()
     inst_out = pretty_midi.Instrument(

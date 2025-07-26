@@ -805,7 +805,12 @@ def exportar_montuno(
 
     if limite > 0:
         has_start = any(n.start <= 0 < n.end and n.pitch > 0 for n in nuevas_notas)
-        has_end = any(n.start < limite and abs(n.end - limite) < 1e-6 and n.pitch > 0 for n in nuevas_notas)
+        has_end = any(
+            n.pitch > 0
+            and n.start < limite
+            and n.end > limite - grid
+            for n in nuevas_notas
+        )
         if not has_start:
             nuevas_notas.append(
                 pretty_midi.Note(

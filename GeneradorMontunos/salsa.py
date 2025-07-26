@@ -528,14 +528,28 @@ def montuno_salsa(
     notas_finales = _cortar_notas_superpuestas(notas_finales)
     notas_finales = _recortar_notas_a_limite(notas_finales, limite)
     if limite > 0:
-        notas_finales.append(
-            pretty_midi.Note(
-                velocity=1,
-                pitch=0,
-                start=max(0.0, limite - grid),
-                end=limite,
-            )
+        has_start = any(n.start <= 0 < n.end and n.pitch > 0 for n in notas_finales)
+        has_end = any(
+            n.pitch > 0 and n.start < limite and n.end > limite - grid for n in notas_finales
         )
+        if not has_start:
+            notas_finales.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=0,
+                    start=0.0,
+                    end=min(grid, limite),
+                )
+            )
+        if not has_end:
+            notas_finales.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=0,
+                    start=max(0.0, limite - grid),
+                    end=limite,
+                )
+            )
 
     pm_out = pretty_midi.PrettyMIDI()
     inst = pretty_midi.Instrument(
