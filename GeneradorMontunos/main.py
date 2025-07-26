@@ -1721,8 +1721,8 @@ def main():
     def actualizar_armonizacion() -> None:
         """Refresh preview when global settings change."""
         actualizar_midi()
-        actualizar_visualizacion()
         _update_text_from_selections()
+        actualizar_visualizacion()
 
     # Default mode combobox kept hidden for internal use
     modo_var = StringVar(value=MODOS_LABELS["Tradicional"])
