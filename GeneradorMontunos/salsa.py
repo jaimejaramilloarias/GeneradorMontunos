@@ -412,6 +412,7 @@ def montuno_salsa(
     inversiones_manual: Optional[List[str]] = None,
     return_pm: bool = False,
     variante: str = "A",   # <-- NUEVO parámetro
+    asignaciones_custom: Optional[List[Tuple[str, List[int], str, Optional[str]]]] = None,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Genera montuno estilo salsa enlazando acordes e inversiones.
 
@@ -422,9 +423,17 @@ def montuno_salsa(
     """
     # Procesa la progresión. Cada compás puede contener uno o dos acordes
     print("[DEBUG] Texto que llega a procesar_progresion_salsa (Salsa):", repr(progresion_texto))
-    asignaciones, compases = procesar_progresion_salsa(
-        progresion_texto, inicio_cor=inicio_cor
-    )
+    if asignaciones_custom is None:
+        asignaciones, compases = procesar_progresion_salsa(
+            progresion_texto, inicio_cor=inicio_cor
+        )
+    else:
+        asignaciones = asignaciones_custom
+        compases = (
+            (max(i for _, idxs, _, _ in asignaciones for i in idxs) + 7) // 8
+            if asignaciones
+            else 0
+        )
 
     # --------------------------------------------------------------
     # Selección de la inversión para cada acorde enlazando la voz grave

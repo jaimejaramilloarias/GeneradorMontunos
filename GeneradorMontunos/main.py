@@ -365,68 +365,48 @@ def generar(
         status_var.set("Ingresa una progresión de acordes")
         return
 
-    def dividir_por_estilos(texto: str, estilos: List[str], estilo_def: str):
-        """Dividir ``texto`` por estilos conservando barras exactamente."""
+    try:
+        asignaciones_all, _ = salsa.procesar_progresion_salsa(progresion_texto)
+    except Exception as e:
+        status_var.set(str(e))
+        return
 
-        compases = [c.strip() for c in texto.split("|") if c.strip()]
-        tokens_por_compas = [c.split() for c in compases]
+    num_acordes = len(asignaciones_all)
+    estilos_loc = list(chord_styles)
+    if len(estilos_loc) < num_acordes:
+        estilos_loc.extend([modo_nombre] * (num_acordes - len(estilos_loc)))
+    elif len(estilos_loc) > num_acordes:
+        estilos_loc = estilos_loc[:num_acordes]
 
-        # Extrae los acordes junto a los tokens que les preceden
-        chords: List[Dict] = []
-        pending: List[str] = []
-        for idx_c, toks in enumerate(tokens_por_compas):
-            for tok in toks:
-                if CHORD_RE.fullmatch(tok):
-                    chords.append({"bar": idx_c, "tokens": pending + [tok]})
-                    pending = []
-                else:
-                    pending.append(tok)
-            pending = []
-
-        num_acordes = len(chords)
-        estilos_loc = list(estilos)
-        if len(estilos_loc) < num_acordes:
-            estilos_loc.extend([estilo_def] * (num_acordes - len(estilos_loc)))
-        elif len(estilos_loc) > num_acordes:
-            estilos_loc = estilos_loc[:num_acordes]
-
-        if not chords:
-            return []
-
-        segmentos_info: List[Tuple[str, int, int]] = []
-        start = 0
-        modo_actual = estilos_loc[0]
-        for i in range(1, num_acordes):
-            if estilos_loc[i] != modo_actual:
-                segmentos_info.append((modo_actual, start, i))
-                start = i
-                modo_actual = estilos_loc[i]
-        segmentos_info.append((modo_actual, start, num_acordes))
-
-        segmentos: List[Tuple[str, str, List[int]]] = []
-        for modo, a, b in segmentos_info:
-            parts: List[str] = []
-            for j in range(a, b):
-                parts.extend(chords[j]["tokens"])
-                if j + 1 == b or chords[j + 1]["bar"] != chords[j]["bar"]:
-                    parts.append("|")
-            if parts and parts[-1] == "|":
-                parts.pop()
-            texto_seg = " ".join(parts)
-            segmentos.append((modo, texto_seg, list(range(a, b))))
-
-        return segmentos
-
-    segmentos = dividir_por_estilos(progresion_texto, chord_styles, modo_nombre)
-    if not segmentos:
+    if not asignaciones_all:
         status_var.set("Progresión vacía")
         return
 
+    segmentos_info: List[Tuple[str, int, int]] = []
+    start = 0
+    modo_actual = estilos_loc[0]
+    for i in range(1, num_acordes):
+        if estilos_loc[i] != modo_actual:
+            segmentos_info.append((modo_actual, start, i))
+            start = i
+            modo_actual = estilos_loc[i]
+    segmentos_info.append((modo_actual, start, num_acordes))
+
+    segmentos: List[Tuple[str, List[Tuple], int, List[int]]] = []
+    for modo, a, b in segmentos_info:
+        asign_abs = asignaciones_all[a:b]
+        start_cor = asign_abs[0][1][0]
+        rel = [
+            (n, [i - start_cor for i in idxs], arm, inv)
+            for n, idxs, arm, inv in asign_abs
+        ]
+        segmentos.append((modo, rel, start_cor, list(range(a, b))))
+
     modo_tag = (
         "salsa"
-        if len({m for m, _, _ in segmentos}) == 1 and segmentos[0][0] == "Salsa"
+        if len({m for m, _, _, _ in segmentos}) == 1 and segmentos[0][0] == "Salsa"
         else "tradicional"
-        if len({m for m, _, _ in segmentos}) == 1 and segmentos[0][0] == "Tradicional"
+        if len({m for m, _, _, _ in segmentos}) == 1 and segmentos[0][0] == "Tradicional"
         else "mixto"
     )
     clave_tag = cfg["midi_prefix"].split("_")[1]
@@ -443,12 +423,11 @@ def generar(
     notas_finales = []
     cur_bpm = 120.0
     inst_params = None
-    offset_cor = 0  # eighth-note index for the next segment
+    max_cor = 0
 
     with TemporaryDirectory() as tmpdir:
         inv_idx = 0
-        for idx, (modo_seg, texto_seg, idxs_seg) in enumerate(segmentos):
-            print(f"[DEBUG] Segmento {idx} que se pasa al parser ({modo_seg}):", repr(texto_seg))
+        for idx, (modo_seg, asign_seg, start_cor, idxs_seg) in enumerate(segmentos):
             funcion = MODOS_DISPONIBLES.get(modo_seg)
             if funcion is None:
                 status_var.set(f"Modo no soportado: {modo_seg}")
@@ -472,10 +451,9 @@ def generar(
                 return
 
             tmp_path = Path(tmpdir) / f"seg{idx}.mid"
-            kwargs = {}
+            kwargs = {"asignaciones_custom": asign_seg}
             if modo_seg == "Salsa":
                 if inversiones_custom is not None:
-                    asign_seg, _ = salsa.procesar_progresion_salsa(texto_seg)
                     inv_seg = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
                     inv_idx += len(asign_seg)
                     if inv_seg:
@@ -489,11 +467,11 @@ def generar(
                 kwargs["aleatorio"] = True
             try:
                 funcion(
-                    texto_seg,
+                    "",
                     midi_ref_seg,
                     tmp_path,
                     arg_extra,
-                    inicio_cor=offset_cor,
+                    inicio_cor=start_cor,
                     return_pm=False,
                     **kwargs,
                 )
@@ -510,7 +488,7 @@ def generar(
             escala = 1.0
             grid_seg = 60.0 / seg_bpm / 2
             seg_cor = int(round(pm.get_end_time() / grid_seg))
-            start = offset_cor * (60.0 / cur_bpm / 2)
+            start = start_cor * (60.0 / cur_bpm / 2)
             for n in pm.instruments[0].notes:
                 if n.pitch == 0:
                     continue
@@ -522,10 +500,11 @@ def generar(
                         end=n.end * escala + start,
                     )
                 )
-            offset_cor += seg_cor
+            if start_cor + seg_cor > max_cor:
+                max_cor = start_cor + seg_cor
 
     grid = 60.0 / cur_bpm / 2
-    final_offset = offset_cor * grid
+    final_offset = max_cor * grid
     if final_offset > 0:
         notas_finales.append(
             pretty_midi.Note(
