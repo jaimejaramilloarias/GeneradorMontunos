@@ -66,7 +66,9 @@ def calc_default_inversions(
     """Return default inversions for ``asignaciones`` using the salsa helpers."""
     invs: list[str] = []
     voz = None
-    for idx, (cif, _, _, inv_for, _) in enumerate(asignaciones):
+    for idx, data in enumerate(asignaciones):
+        cif = data[0]
+        inv_for = data[3] if len(data) > 3 else None
         if idx == 0:
             inv = inv_for or limpiar_inversion(inversion_getter())
             pitch = get_bass_pitch(cif, inv)
