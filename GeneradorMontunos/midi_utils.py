@@ -749,7 +749,7 @@ def exportar_montuno(
         total_dest_cor = max(i for _, idxs, _ in asignaciones for i in idxs) + 1
     else:
         total_dest_cor = num_compases * 8
-    limite_cor = ((total_dest_cor + 7) // 8) * 8
+    limite_cor = total_dest_cor
     # --------------------------------------------------------------
     # The reference must align with the absolute eighth-note position of
     # the progression so changes of mode or template never break the
