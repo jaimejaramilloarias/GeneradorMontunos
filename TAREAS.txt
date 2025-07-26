@@ -1,7 +1,7 @@
 Tengo un proyecto de generación de patrones MIDI a partir de cifrado de acordes con reglas muy específicas; revisa los siguientes comportamientos esperados y corrigelos completamente:
 
 - [ ] - La barra de compás " | " en el cifrado y la regla de máximo dos acordes por compás SOLO debe aplicarse al parser del cifrado para visualizarlo y validarlo.
-- [ ] - **La generación MIDI NO debe tener ninguna lógica de compases.** Solo debe trabajar con grupos de corcheas globales.
+- [x] - **La generación MIDI NO debe tener ninguna lógica de compases.** Solo debe trabajar con grupos de corcheas globales.
 - [ ] - Los grupos de corcheas están definidos por la clave rítmica, y son los que determinan la duración de cada acorde: 
 - [ ] - Si hay un solo acorde en un compás, debe ocupar DOS grupos de corcheas sucesivos. 
 - [ ] - Si hay dos acordes en un compás, cada uno debe ocupar UN grupo de corcheas.
