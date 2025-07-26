@@ -946,7 +946,7 @@ def main():
         note_height = (pmax - pmin + 1) * step + 20
         global PLAYHEAD_HEIGHT
         PLAYHEAD_HEIGHT = note_height + Y_OFFSET - 10
-        bpm = 120.0
+        bpm = float(bpm_var.get() or 120)
         grid = 60.0 / bpm / 2
         num_eighths = int(round(tmax / grid)) + 1
         width = num_eighths * CELL_WIDTH + 20
@@ -1306,8 +1306,6 @@ def main():
             canvas.create_window(
                 xm, base_y + sep, window=om_style, anchor="nw", tags="menu"
             )
-            menu_widgets.append(om_style)
-            canvas.create_window(xm, base_y + sep, window=om_style, anchor="nw")
 
 
 
