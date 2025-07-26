@@ -2,7 +2,7 @@
 """Helpers for reading, manipulating and exporting MIDI files."""
 
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 import math
 import pretty_midi
 import random
@@ -37,7 +37,7 @@ def aplicar_voicings_a_referencia(
     """
 
     # Mapeo corchea → índice de voicing
-    mapa: dict[int, int] = {}
+    mapa: Dict[int, int] = {}
     max_idx = -1
     for i, (_, idxs) in enumerate(asignaciones):
         for ix in idxs:
@@ -132,13 +132,13 @@ def _arm_por_parejas(
     """
 
     # Map each eighth index to the corresponding voicing/chord
-    mapa: dict[int, int] = {}
+    mapa: Dict[int, int] = {}
     for i, (_, idxs) in enumerate(asignaciones):
         for ix in idxs:
             mapa[ix] = i
 
     # Counter so each chord advances through its voicing in parallel
-    contadores: dict[int, int] = {}
+    contadores: Dict[int, int] = {}
 
     resultado: List[pretty_midi.Note] = []
     for pos in posiciones:
@@ -214,12 +214,12 @@ def _arm_decimas_intervalos(
     # and flags indicating whether it is a sixth chord or a diminished
     # seventh.
     # ------------------------------------------------------------------
-    mapa: dict[int, int] = {}
+    mapa: Dict[int, int] = {}
     for i, (_, idxs) in enumerate(asignaciones):
         for ix in idxs:
             mapa[ix] = i
 
-    info: list[dict] = []
+    info: List[Dict] = []
     for nombre, _ in asignaciones:
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
@@ -235,10 +235,10 @@ def _arm_decimas_intervalos(
             }
         )
 
-    contadores: dict[int, int] = {}
-    offsets: dict[int, int] = {}
-    bajo_anterior: int | None = None
-    arm_anterior: str | None = None
+    contadores: Dict[int, int] = {}
+    offsets: Dict[int, int] = {}
+    bajo_anterior: Optional[int] = None
+    arm_anterior: Optional[str] = None
     resultado: List[pretty_midi.Note] = []
 
     for pos in posiciones:
@@ -351,12 +351,12 @@ def _arm_treceavas_intervalos(
     the added voice is placed a thirteenth (20 or 21 semitones) below it.
     """
 
-    mapa: dict[int, int] = {}
+    mapa: Dict[int, int] = {}
     for i, (_, idxs) in enumerate(asignaciones):
         for ix in idxs:
             mapa[ix] = i
 
-    info: list[dict] = []
+    info: List[Dict] = []
     for nombre, _ in asignaciones:
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
@@ -372,10 +372,10 @@ def _arm_treceavas_intervalos(
             }
         )
 
-    contadores: dict[int, int] = {}
-    offsets: dict[int, int] = {}
-    bajo_anterior: int | None = None
-    arm_anterior: str | None = None
+    contadores: Dict[int, int] = {}
+    offsets: Dict[int, int] = {}
+    bajo_anterior: Optional[int] = None
+    arm_anterior: Optional[str] = None
     resultado: List[pretty_midi.Note] = []
 
     for pos in posiciones:
@@ -477,7 +477,7 @@ _ARMONIZADORES = {
 }
 
 
-def _ajustar_salto(prev_pitch: int | None, pitch: int) -> int:
+def _ajustar_salto(prev_pitch: Optional[int], pitch: int) -> int:
     """Return ``pitch`` transposed by octaves so the leap from ``prev_pitch``
     is less than an octave."""
 
@@ -503,14 +503,14 @@ def generar_notas_mixtas(
     ``asignaciones`` debe contener tuplas ``(acorde, indices, armonizacion)``.
     """
 
-    mapa: dict[int, int] = {}
-    armonias: dict[int, str] = {}
+    mapa: Dict[int, int] = {}
+    armonias: Dict[int, str] = {}
     for i, (_, idxs, arm) in enumerate(asignaciones):
         for ix in idxs:
             mapa[ix] = i
         armonias[i] = (arm or "").lower()
 
-    info: list[dict] = []
+    info: List[Dict] = []
     for nombre, _, _ in asignaciones:
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
@@ -526,10 +526,10 @@ def generar_notas_mixtas(
             }
         )
 
-    contadores: dict[int, int] = {}
-    offsets: dict[int, int] = {}
-    bajo_anterior: int | None = None
-    arm_anterior: str | None = None
+    contadores: Dict[int, int] = {}
+    offsets: Dict[int, int] = {}
+    bajo_anterior: Optional[int] = None
+    arm_anterior: Optional[str] = None
     resultado: List[pretty_midi.Note] = []
 
     for pos in posiciones:
@@ -699,7 +699,7 @@ def _cortar_notas_superpuestas(notas: List[pretty_midi.Note]) -> List[pretty_mid
     artefacts caused by overlapping identical pitches.
     """
 
-    agrupadas: dict[int, List[pretty_midi.Note]] = {}
+    agrupadas: Dict[int, List[pretty_midi.Note]] = {}
     for n in sorted(notas, key=lambda x: (x.pitch, x.start)):
         lista = agrupadas.setdefault(n.pitch, [])
         if lista and lista[-1].end > n.start:
@@ -717,13 +717,13 @@ def exportar_montuno(
     asignaciones: List[Tuple[str, List[int], str]],
     num_compases: int,
     output_path: Path,
-    armonizacion: str | None = None,
+    armonizacion: Optional[str] = None,
     *,
     inicio_cor: int = 0,
     debug: bool = False,
     return_pm: bool = False,
     aleatorio: bool = False,
-) -> pretty_midi.PrettyMIDI | None:
+) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
     The resulting notes are trimmed so the output stops after the last
@@ -867,7 +867,7 @@ def _indice_para_corchea(cor: int) -> int:
 
 def procesar_progresion_en_grupos(
     texto: str,
-    armonizacion_default: str | None = None,
+    armonizacion_default: Optional[str] = None,
     *,
     inicio_cor: int = 0,
 ) -> Tuple[List[Tuple[str, List[int], str]], int]:
@@ -898,7 +898,7 @@ def procesar_progresion_en_grupos(
 
     arm_actual = (armonizacion_default or "").capitalize()
 
-    def procesar_token(token: str) -> tuple[str | None, str | None]:
+    def procesar_token(token: str) -> Tuple[Optional[str], Optional[str]]:
         nonlocal arm_actual
 
         m = re.match(r"^\[[A-Z]+\](.*)$", token)

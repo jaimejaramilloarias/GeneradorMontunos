@@ -3,7 +3,7 @@
 
 import customtkinter as ctk
 from tkinter import Listbox, END, ACTIVE
-from typing import List
+from typing import List, Optional
 import re
 
 from voicings import INTERVALOS_TRADICIONALES, NOTAS, parsear_nombre_acorde
@@ -14,10 +14,10 @@ class ChordAutocomplete(ctk.CTkTextbox):
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
-        self._popup: ctk.CTkToplevel | None = None
-        self._listbox: Listbox | None = None
+        self._popup: Optional[ctk.CTkToplevel] = None
+        self._listbox: Optional[Listbox] = None
         self._suggestions: List[str] = []
-        self._popup_type: str | None = None
+        self._popup_type: Optional[str] = None
 
         self._roots = sorted(NOTAS.keys(), key=lambda x: (len(x), x))
 

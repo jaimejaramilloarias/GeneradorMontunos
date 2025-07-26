@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from pathlib import Path
 import json
+from typing import Dict, Optional
 
 CONFIG_FILE = Path.home() / ".cajonea2_prefs.json"
 
@@ -16,7 +17,7 @@ COLORS = {
 }
 
 
-def _load_font_from_file(root, name: str) -> str | None:
+def _load_font_from_file(root, name: str) -> Optional[str]:
     try:
         import tkinter.font as tkfont
         font_path = Path(__file__).with_name(name)
@@ -41,7 +42,7 @@ def get_measure_font(root) -> ctk.CTkFont:
     return ctk.CTkFont(family="Monaco", size=14, weight="bold")
 
 
-def load_preferences() -> dict:
+def load_preferences() -> Dict:
     """Load saved appearance preferences from disk.
 
     Returns a dictionary with font settings if available."""
@@ -56,7 +57,7 @@ def load_preferences() -> dict:
     return {}
 
 
-def save_preferences(fonts: dict | None = None) -> None:
+def save_preferences(fonts: Optional[Dict] = None) -> None:
     """Persist current colors and optional font settings to disk."""
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     data = {'colors': COLORS}
