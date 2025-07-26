@@ -46,7 +46,8 @@ def aplicar_voicings_a_referencia(
     # Mapeo corchea → índice de voicing
     mapa: Dict[int, int] = {}
     max_idx = -1
-    for i, (_, idxs) in enumerate(asignaciones):
+    for i, data in enumerate(asignaciones):
+        idxs = data[1]
         for ix in idxs:
             mapa[ix] = i
             if ix > max_idx:
@@ -140,7 +141,8 @@ def _arm_por_parejas(
 
     # Map each eighth index to the corresponding voicing/chord
     mapa: Dict[int, int] = {}
-    for i, (_, idxs) in enumerate(asignaciones):
+    for i, data in enumerate(asignaciones):
+        idxs = data[1]
         for ix in idxs:
             mapa[ix] = i
 
@@ -222,12 +224,14 @@ def _arm_decimas_intervalos(
     # seventh.
     # ------------------------------------------------------------------
     mapa: Dict[int, int] = {}
-    for i, (_, idxs) in enumerate(asignaciones):
+    for i, data in enumerate(asignaciones):
+        idxs = data[1]
         for ix in idxs:
             mapa[ix] = i
 
     info: List[Dict] = []
-    for nombre, _ in asignaciones:
+    for data in asignaciones:
+        nombre = data[0]
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
@@ -356,12 +360,14 @@ def _arm_treceavas_intervalos(
     """
 
     mapa: Dict[int, int] = {}
-    for i, (_, idxs) in enumerate(asignaciones):
+    for i, data in enumerate(asignaciones):
+        idxs = data[1]
         for ix in idxs:
             mapa[ix] = i
 
     info: List[Dict] = []
-    for nombre, _ in asignaciones:
+    for data in asignaciones:
+        nombre = data[0]
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
@@ -502,13 +508,16 @@ def generar_notas_mixtas(
 
     mapa: Dict[int, int] = {}
     armonias: Dict[int, str] = {}
-    for i, (_, idxs, arm) in enumerate(asignaciones):
+    for i, data in enumerate(asignaciones):
+        idxs = data[1]
+        arm = data[2]
         for ix in idxs:
             mapa[ix] = i
         armonias[i] = (arm or "").lower()
 
     info: List[Dict] = []
-    for nombre, _, _ in asignaciones:
+    for data in asignaciones:
+        nombre = data[0]
         root_pc, suf = parsear_nombre_acorde(nombre)
         ints = INTERVALOS_TRADICIONALES[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
@@ -743,11 +752,11 @@ def exportar_montuno(
 
     if debug:
         logger.debug("Asignacion de acordes a corcheas:")
-        for acorde, idxs, arm in asignaciones:
+        for acorde, idxs, arm, *_ in asignaciones:
             logger.debug("  %s (%s): %s", acorde, arm, idxs)
 
     if asignaciones:
-        total_dest_cor = max(i for _, idxs, _ in asignaciones for i in idxs) + 1
+        total_dest_cor = max(i for _, idxs, *_ in asignaciones for i in idxs) + 1
     else:
         total_dest_cor = num_compases * 8
     limite_cor = total_dest_cor
