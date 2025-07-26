@@ -365,62 +365,54 @@ def generar(
         return
 
     def dividir_por_estilos(texto: str, estilos: list[str], estilo_def: str):
-        """
-        Divide ``texto`` en segmentos por modo, preservando exactamente la estructura de barras.
+        """Dividir ``texto`` por estilos conservando barras exactamente."""
 
-        Devuelve una lista de tuplas (estilo, texto_segmento, indices)
-        donde indices son los índices de los acordes originales incluidos en el segmento.
-        """
+        compases = [c.strip() for c in texto.split("|") if c.strip()]
+        tokens_por_compas = [c.split() for c in compases]
 
-        # Divide el texto en compases (por barras)
-        compases = [c.strip() for c in texto.split('|') if c.strip()]
-        acordes_por_compas = [c.split() for c in compases]
-        # Linealiza la lista de acordes
-        acordes = [a for grupo in acordes_por_compas for a in grupo]
-        num_acordes = len(acordes)
+        # Extrae los acordes junto a los tokens que les preceden
+        chords: list[dict] = []
+        pending: list[str] = []
+        for idx_c, toks in enumerate(tokens_por_compas):
+            for tok in toks:
+                if CHORD_RE.fullmatch(tok):
+                    chords.append({"bar": idx_c, "tokens": pending + [tok]})
+                    pending = []
+                else:
+                    pending.append(tok)
+            pending = []
 
+        num_acordes = len(chords)
         estilos_loc = list(estilos)
         if len(estilos_loc) < num_acordes:
             estilos_loc.extend([estilo_def] * (num_acordes - len(estilos_loc)))
         elif len(estilos_loc) > num_acordes:
             estilos_loc = estilos_loc[:num_acordes]
 
-        segmentos: list[tuple[str, str, list[int]]] = []
-        if not acordes:
-            return segmentos
+        if not chords:
+            return []
 
-        # Recorrer los acordes y reagrupar por modo
+        segmentos_info: list[tuple[str, int, int]] = []
+        start = 0
         modo_actual = estilos_loc[0]
-        indices_segmento = [0]
-        compases_segmento = [0]  # índice del compás en compases
-        idx_compas = 0
-        pos_acorde_en_compas = 1
-
         for i in range(1, num_acordes):
             if estilos_loc[i] != modo_actual:
-                # Termina el segmento anterior
-                compases_a_incluir = compases[compases_segmento[0]:idx_compas + 1]
-                texto_seg = " | ".join(compases_a_incluir)
-                segmentos.append((modo_actual, texto_seg, indices_segmento))
-                # Nuevo segmento
+                segmentos_info.append((modo_actual, start, i))
+                start = i
                 modo_actual = estilos_loc[i]
-                indices_segmento = [i]
-                compases_segmento = [idx_compas]
-            else:
-                indices_segmento.append(i)
-            # Avanza posición de acorde en compás
-            if pos_acorde_en_compas >= len(acordes_por_compas[idx_compas]):
-                idx_compas += 1
-                pos_acorde_en_compas = 1
-                compases_segmento.append(idx_compas)
-            else:
-                pos_acorde_en_compas += 1
+        segmentos_info.append((modo_actual, start, num_acordes))
 
-        # Agrega el último segmento
-        if indices_segmento:
-            compases_a_incluir = compases[compases_segmento[0]:idx_compas + 1]
-            texto_seg = " | ".join(compases_a_incluir)
-            segmentos.append((modo_actual, texto_seg, indices_segmento))
+        segmentos: list[tuple[str, str, list[int]]] = []
+        for modo, a, b in segmentos_info:
+            parts: list[str] = []
+            for j in range(a, b):
+                parts.extend(chords[j]["tokens"])
+                if j + 1 == b or chords[j + 1]["bar"] != chords[j]["bar"]:
+                    parts.append("|")
+            if parts and parts[-1] == "|":
+                parts.pop()
+            texto_seg = " ".join(parts)
+            segmentos.append((modo, texto_seg, list(range(a, b))))
 
         return segmentos
 
