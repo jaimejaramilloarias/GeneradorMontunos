@@ -43,16 +43,16 @@ def montuno_tradicional(
     else:
         asignaciones = asignaciones_custom
         compases = (
-            (max(i for _, idxs, _ in asignaciones for i in idxs) + 7) // 8
+            (max(i for _, idxs, *_ in asignaciones for i in idxs) + 7) // 8
             if asignaciones
             else 0
         )
     if armonizaciones_custom is not None:
         for idx, arm in enumerate(armonizaciones_custom):
             if idx < len(asignaciones):
-                nombre, idxs, _ = asignaciones[idx]
+                nombre, idxs = asignaciones[idx][:2]
                 asignaciones[idx] = (nombre, idxs, arm)
-    acordes = [a for a, _, _ in asignaciones]
+    acordes = [data[0] for data in asignaciones]
     voicings = generar_voicings_enlazados_tradicional(acordes)
     return exportar_montuno(
         midi_ref,
