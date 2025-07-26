@@ -459,6 +459,18 @@ def generar(
                     if inv_seg:
                         kwargs["inversiones_manual"] = inv_seg
             else:
+                if inversiones_custom is not None:
+                    inv_seg = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
+                    inv_idx += len(asign_seg)
+                    if inv_seg:
+                        suf_map = {"root": "1", "third": "3", "fifth": "5", "seventh": "7"}
+                        asign_mod = []
+                        for (nombre, idxs, arm, *rest), inv in zip(asign_seg, inv_seg):
+                            if inv and inv != "root":
+                                nombre = f"{nombre}/{suf_map.get(inv, '1')}"
+                            asign_mod.append((nombre, idxs, arm))
+                        asign_seg = asign_mod
+                        kwargs["asignaciones_custom"] = asign_seg
                 if armonias_custom is not None:
                     armon_seg = [armonias_custom[i] for i in idxs_seg]
                 else:
