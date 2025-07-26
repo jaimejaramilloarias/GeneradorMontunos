@@ -4,6 +4,7 @@
 from pathlib import Path
 
 import pretty_midi
+from typing import List, Optional
 
 
 from voicings_tradicional import generar_voicings_enlazados_tradicional
@@ -22,13 +23,13 @@ def montuno_tradicional(
     progresion_texto: str,
     midi_ref: Path,
     output: Path,
-    armonizacion: str | None = None,
+    armonizacion: Optional[str] = None,
     *,
     inicio_cor: int = 0,
     return_pm: bool = False,
     aleatorio: bool = False,
-    armonizaciones_custom: list[str] | None = None,
-) -> pretty_midi.PrettyMIDI | None:
+    armonizaciones_custom: Optional[List[str]] = None,
+) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a montuno in the traditional style.
 
     ``armonizacion`` especifica la forma de duplicar las notas generadas. Por

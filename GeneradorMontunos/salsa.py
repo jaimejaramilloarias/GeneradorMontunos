@@ -124,10 +124,10 @@ def get_bass_pitch(cifrado: str, inversion: str) -> int:
         raise ValueError(f"Inversión desconocida: {inversion}")
 
 
-def seleccionar_inversion(anterior: Optional[int], cifrado: str) -> tuple[str, int]:
+def seleccionar_inversion(anterior: Optional[int], cifrado: str) -> Tuple[str, int]:
     """Selecciona la inversión que genere el salto más corto (<= SALTO_MAX)."""
 
-    mejores: list[tuple[int, str, int]] = []
+    mejores: List[Tuple[int, str, int]] = []
     for inv in INVERSIONS:
         pitch = get_bass_pitch(cifrado, inv)
         pitch = _ajustar_rango_flexible(anterior, pitch)
@@ -242,10 +242,10 @@ def _extraer_grupos_con_nombres(
 
 def _cargar_grupos_por_inversion(
     plantillas: Dict[str, pretty_midi.PrettyMIDI],
-) -> tuple[dict[str, List[List[dict]]], int, float, float]:
+) -> Tuple[Dict[str, List[List[Dict]]], int, float, float]:
     """Devuelve notas agrupadas por corchea para cada inversión."""
 
-    grupos_por_inv: dict[str, List[List[dict]]] = {}
+    grupos_por_inv: Dict[str, List[List[Dict]]] = {}
     total_cor_ref = None
     grid = bpm = None
     for inv, pm in plantillas.items():
@@ -282,7 +282,7 @@ def _indice_para_corchea(cor: int) -> int:
 
 def procesar_progresion_salsa(
     texto: str,
-    armonizacion_default: str | None = None,
+    armonizacion_default: Optional[str] = None,
     *,
     inicio_cor: int = 0,
 ) -> Tuple[List[Tuple[str, List[int], str, Optional[str]]], int]:
@@ -310,7 +310,7 @@ def procesar_progresion_salsa(
     arm_actual = (armonizacion_default or "").capitalize()
     inv_forzado: Optional[str] = None
 
-    def procesar_token(token: str) -> tuple[str | None, str | None]:
+    def procesar_token(token: str) -> Tuple[Optional[str], Optional[str]]:
         """Return ``(chord, inversion)`` parsed from ``token``.
 
         The global ``arm_actual`` is updated if the token contains a
@@ -357,7 +357,7 @@ def procesar_progresion_salsa(
 
     for seg in segmentos:
         tokens = [t for t in seg.split() if t]
-        acordes: list[tuple[str, str, Optional[str]]] = []
+        acordes: List[Tuple[str, str, Optional[str]]] = []
         for tok in tokens:
             nombre, inv_local = procesar_token(tok)
             if nombre is None:
@@ -409,10 +409,10 @@ def montuno_salsa(
     inversion_inicial: str = "root",
     *,
     inicio_cor: int = 0,
-    inversiones_manual: list[str] | None = None,
+    inversiones_manual: Optional[List[str]] = None,
     return_pm: bool = False,
     variante: str = "A",   # <-- NUEVO parámetro
-) -> pretty_midi.PrettyMIDI | None:
+) -> Optional[pretty_midi.PrettyMIDI]:
     """Genera montuno estilo salsa enlazando acordes e inversiones.
 
     ``inversion_inicial`` determina la posición del primer acorde y guía el
@@ -452,7 +452,7 @@ def montuno_salsa(
 
     # Carga los midis de referencia una única vez por inversión y
     # construye las posiciones repetidas para toda la progresión
-    plantillas: dict[str, pretty_midi.PrettyMIDI] = {}
+    plantillas: Dict[str, pretty_midi.PrettyMIDI] = {}
     parts = midi_ref.stem.split("_")
     base = "_".join(parts[:2]) if len(parts) >= 2 else midi_ref.stem
     if len(parts) >= 4:

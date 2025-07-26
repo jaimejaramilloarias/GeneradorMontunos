@@ -113,7 +113,7 @@ def generar_voicings_enlazados_tradicional(progresion: List[str]) -> List[List[i
         intervalos = INTERVALOS_TRADICIONALES[suf][:4]
         notas_base = [root + i for i in intervalos]
 
-        candidatos: list[tuple[int, int, list[int], int]] = []
+        candidatos: List[Tuple[int, int, List[int], int]] = []
         for o in range(1, 5):  # octavas razonables para graves
             acorde = [n + 12 * o for n in notas_base]
             for idx_bajo, n in enumerate(acorde):

@@ -38,6 +38,7 @@ import time
 import mido
 import pretty_midi
 import pygame.midi
+from typing import Dict, List, Optional, Tuple, Set
 
 from autocomplete import ChordAutocomplete
 
@@ -94,8 +95,8 @@ CELL_WIDTH = 40
 CHORD_INPUT_MAX_HEIGHT = 80
 
 # Global undo/redo stacks used for the universal undo feature
-UNDO_STACK: list[dict] = []
-REDO_STACK: list[dict] = []
+UNDO_STACK: List[Dict] = []
+REDO_STACK: List[Dict] = []
 _suppress_undo = False
 _updating = False
 
@@ -108,7 +109,7 @@ logger = logging.getLogger(__name__)
 class _MultiPort:
     """Simple wrapper to send MIDI messages to multiple ports."""
 
-    def __init__(self, ports: list[pygame.midi.Output]):
+    def __init__(self, ports: List[pygame.midi.Output]):
         self.ports = ports
 
     def note_on(self, *args, **kwargs) -> None:  # pragma: no cover - UI code
@@ -175,9 +176,9 @@ INV_ORDER = [v for _, v in INVERSIONES]
 # allowing these utilities to be tested standalone.
 # ---------------------------------------------------------------------------
 
-current_inversions: list[str] = []
-chord_styles: list[str] = []
-chord_armos: list[str] = []
+current_inversions: List[str] = []
+chord_styles: List[str] = []
+chord_armos: List[str] = []
 
 _current_modo = "Tradicional"
 _current_armon = "Octavas"
@@ -325,15 +326,15 @@ def generar(
     modo_combo: ComboBox,
     armon_combo: ComboBox,
     *,
-    inversiones_custom: list[str] | None = None,
-    armonias_custom: list[str] | None = None,
+    inversiones_custom: Optional[List[str]] = None,
+    armonias_custom: Optional[List[str]] = None,
     return_pm: bool = False,
-    output_path: Path | None = None,
-    override_text: str | None = None,
-    manual_edits: list[dict] | None = None,
-    seed: int | None = None,
-    bpm: float | None = None,
-) -> pretty_midi.PrettyMIDI | None:
+    output_path: Optional[Path] = None,
+    override_text: Optional[str] = None,
+    manual_edits: Optional[List[Dict]] = None,
+    seed: Optional[int] = None,
+    bpm: Optional[float] = None,
+) -> Optional[pretty_midi.PrettyMIDI]:
     if seed is not None:
         import random
         old_state = random.getstate()
@@ -364,15 +365,15 @@ def generar(
         status_var.set("Ingresa una progresión de acordes")
         return
 
-    def dividir_por_estilos(texto: str, estilos: list[str], estilo_def: str):
+    def dividir_por_estilos(texto: str, estilos: List[str], estilo_def: str):
         """Dividir ``texto`` por estilos conservando barras exactamente."""
 
         compases = [c.strip() for c in texto.split("|") if c.strip()]
         tokens_por_compas = [c.split() for c in compases]
 
         # Extrae los acordes junto a los tokens que les preceden
-        chords: list[dict] = []
-        pending: list[str] = []
+        chords: List[Dict] = []
+        pending: List[str] = []
         for idx_c, toks in enumerate(tokens_por_compas):
             for tok in toks:
                 if CHORD_RE.fullmatch(tok):
@@ -392,7 +393,7 @@ def generar(
         if not chords:
             return []
 
-        segmentos_info: list[tuple[str, int, int]] = []
+        segmentos_info: List[Tuple[str, int, int]] = []
         start = 0
         modo_actual = estilos_loc[0]
         for i in range(1, num_acordes):
@@ -402,9 +403,9 @@ def generar(
                 modo_actual = estilos_loc[i]
         segmentos_info.append((modo_actual, start, num_acordes))
 
-        segmentos: list[tuple[str, str, list[int]]] = []
+        segmentos: List[Tuple[str, str, List[int]]] = []
         for modo, a, b in segmentos_info:
-            parts: list[str] = []
+            parts: List[str] = []
             for j in range(a, b):
                 parts.extend(chords[j]["tokens"])
                 if j + 1 == b or chords[j + 1]["bar"] != chords[j]["bar"]:
@@ -592,7 +593,7 @@ def main():
     # MIDI port detection
     # ------------------------------------------------------------------
     pygame.midi.init()
-    port_map: dict[str, int] = {}
+    port_map: Dict[str, int] = {}
     try:
         for i in range(pygame.midi.get_count()):
             info = pygame.midi.get_device_info(i)
@@ -657,10 +658,10 @@ def main():
     bpm_var = StringVar(value="120")
     midi_var = StringVar()
     status_var = StringVar()
-    current_seed: int | None = None
+    current_seed: Optional[int] = None
 
     pm_preview = None
-    play_thread: threading.Thread | None = None
+    play_thread: Optional[threading.Thread] = None
     play_stop = threading.Event()
 
     def actualizar_midi() -> None:
@@ -761,7 +762,7 @@ def main():
             actualizar_visualizacion(idx)
             root.after_idle(lambda i=idx: _scroll_to_chord(i))
 
-    menu_widgets: list = []
+    menu_widgets: List = []
 
     def _register_widget(w):
         """Register widgets created in ``_draw_piano_roll``.
@@ -772,14 +773,14 @@ def main():
         """
         menu_widgets.append(w)
         return w
-    note_items: list[int] = []
-    note_info: list[dict] = []
-    chord_rects: list[tuple[float, float]] = []
-    manual_edits: list[dict] = []
-    dragging_idx: int | None = None
-    selected_notes: set[int] = set()
-    select_rect: int | None = None
-    select_start: tuple[float, float] | None = None
+    note_items: List[int] = []
+    note_info: List[Dict] = []
+    chord_rects: List[Tuple[float, float]] = []
+    manual_edits: List[Dict] = []
+    dragging_idx: Optional[int] = None
+    selected_notes: Set[int] = set()
+    select_rect: Optional[int] = None
+    select_start: Optional[Tuple[float, float]] = None
     last_text = ""
 
     def _record_modify(start: float, end: float, pitch: int) -> None:
@@ -825,7 +826,7 @@ def main():
     def _clean_tokens(txt: str) -> str:
         return clean_tokens(txt)
 
-    def _cursor_chord_index() -> int | None:
+    def _cursor_chord_index() -> Optional[int]:
         text = texto.text.get("1.0", "end-1c")
         caret = len(texto.text.get("1.0", "insert"))
         cleaned = _clean_tokens(text)
@@ -954,8 +955,8 @@ def main():
                 canvas.itemconfigure(item, fill=color)
         drag_start_y = 0.0
         drag_start_x = 0.0
-        orig_pitches: dict[int, int] = {}
-        orig_times: dict[int, tuple[float, float]] = {}
+        orig_pitches: Dict[int, int] = {}
+        orig_times: Dict[int, Tuple[float, float]] = {}
         notes = [n for n in pm.instruments[0].notes if n.pitch > 0]
         if not notes:
             return

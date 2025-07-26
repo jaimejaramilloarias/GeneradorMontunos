@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Miscellaneous helper functions used across the GUI."""
 
-from typing import Callable, Iterable
+from typing import Callable, Iterable, List, Optional, Tuple
 import re
 import pretty_midi
 
@@ -60,11 +60,11 @@ def calc_default_inversions(
     asignaciones,
     inversion_getter: Callable[[], str],
     get_bass_pitch: Callable[[str, str], int],
-    ajustar_rango_flexible: Callable[[int | None, int], int],
-    seleccionar_inversion: Callable[[int | None, str], tuple[str, int]],
-) -> list[str]:
+    ajustar_rango_flexible: Callable[[Optional[int], int], int],
+    seleccionar_inversion: Callable[[Optional[int], str], Tuple[str, int]],
+) -> List[str]:
     """Return default inversions for ``asignaciones`` using the salsa helpers."""
-    invs: list[str] = []
+    invs: List[str] = []
     voz = None
     for idx, data in enumerate(asignaciones):
         cif = data[0]

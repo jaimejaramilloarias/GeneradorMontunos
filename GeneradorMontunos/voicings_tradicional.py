@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Utilities for generating piano voicings."""
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import logging
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def _ajustar_octava(pitch: int) -> int:
     return pitch
 
 
-def _ajustar_octava_flexible(pitch: int, prev: int | None) -> int:
+def _ajustar_octava_flexible(pitch: int, prev: Optional[int]) -> int:
     """Adjust ``pitch`` preferring the fixed range but allowing a small extension."""
 
     def clamp(p: int, lo: int, hi: int) -> int:

@@ -1,12 +1,12 @@
 """Helpers for style parsing and application."""
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple
 
 __all__ = ["parse_styles", "apply_styles"]
 
-def parse_styles(text: str, get_modo: Callable[[], str], get_armon: Callable[[], str]) -> Tuple[list[str], list[str], list[str]]:
+def parse_styles(text: str, get_modo: Callable[[], str], get_armon: Callable[[], str]) -> Tuple[List[str], List[str], List[str]]:
     """Return mode, harmonisation and inversion lists for each chord."""
     segmentos_raw = [s.strip() for s in text.split("|") if s.strip()]
-    segmentos: list[str] = []
+    segmentos: List[str] = []
     for seg in segmentos_raw:
         if seg == "%":
             if not segmentos:
