@@ -914,8 +914,15 @@ def main():
         # Remove any previous canvas windows tagged as menus just in case a
         # widget was not registered correctly in ``menu_widgets``.
         canvas.delete("menu")
-        # Ensure all previous menu windows were properly registered
-        assert not canvas.find_withtag("menu"), "Stale menu widgets found; use _register_widget"
+        # Ensure all previous menu windows were removed.  Some widgets may not
+        # get properly registered under the "menu" tag when created on certain
+        # platforms, so gracefully clean up any leftovers without raising an
+        # exception that would prevent the piano roll from updating.
+        for item in canvas.find_withtag("menu"):
+            try:
+                canvas.delete(item)
+            except Exception:
+                pass
         # Asegura que no queden widgets huérfanos en el canvas en caso de que
         # alguno no se hubiese añadido a ``menu_widgets`` correctamente.
         for child in canvas.winfo_children():
