@@ -745,6 +745,7 @@ def exportar_montuno(
         total_dest_cor = max(i for _, idxs, _ in asignaciones for i in idxs) + 1
     else:
         total_dest_cor = num_compases * 8
+    limite_cor = ((total_dest_cor + 7) // 8) * 8
     # --------------------------------------------------------------
     # Align the reference with the absolute eighth-note offset of this
     # segment so mode switches never break the continuity.  ``inicio_cor``
@@ -755,7 +756,7 @@ def exportar_montuno(
     if aleatorio:
         posiciones = construir_posiciones_por_ventanas(
             posiciones_base,
-            total_dest_cor,
+            limite_cor,
             total_cor_ref,
             grid,
             inicio_cor=inicio_ref,
@@ -765,13 +766,13 @@ def exportar_montuno(
     else:
         posiciones = construir_posiciones_secuenciales(
             posiciones_base,
-            total_dest_cor,
+            limite_cor,
             total_cor_ref,
             grid,
             inicio_cor=inicio_ref,
         )
 
-    limite = total_dest_cor * grid
+    limite = limite_cor * grid
 
     nuevas_notas = generar_notas_mixtas(
         posiciones, voicings, asignaciones, grid, debug=debug
@@ -787,16 +788,27 @@ def exportar_montuno(
     # ------------------------------------------------------------------
     nuevas_notas = _recortar_notas_a_limite(nuevas_notas, limite)
 
-    # Se añade una nota de duracion cero al final para fijar la longitud
     if limite > 0:
-        nuevas_notas.append(
-            pretty_midi.Note(
-                velocity=1,
-                pitch=0,
-                start=max(0.0, limite - grid),
-                end=limite,
+        has_start = any(n.start <= 0 < n.end and n.pitch > 0 for n in nuevas_notas)
+        has_end = any(n.start < limite and abs(n.end - limite) < 1e-6 and n.pitch > 0 for n in nuevas_notas)
+        if not has_start:
+            nuevas_notas.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=21,
+                    start=0.0,
+                    end=min(grid, limite),
+                )
             )
-        )
+        if not has_end:
+            nuevas_notas.append(
+                pretty_midi.Note(
+                    velocity=1,
+                    pitch=21,
+                    start=max(0.0, limite - grid),
+                    end=limite,
+                )
+            )
 
     pm_out = pretty_midi.PrettyMIDI()
     inst_out = pretty_midi.Instrument(
