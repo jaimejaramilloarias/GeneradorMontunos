@@ -1739,6 +1739,7 @@ def main():
 
     armon_var = StringVar(value=ARMONIZACION_LABELS[ARMONIZACIONES[0]])
     armon_combo = ComboBox(root, variable=armon_var, values=list(ARMONIZACION_LABELS.values()))
+    armon_var.trace_add("write", lambda *a: (_push_state(), actualizar_armonizacion()))
 
     def get_modo() -> str:
         return MODOS_INV.get(modo_combo.get(), modo_combo.get())
