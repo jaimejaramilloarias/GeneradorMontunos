@@ -7,7 +7,7 @@ Tengo un proyecto de generación de patrones MIDI a partir de cifrado de acordes
 - [ ] - Si hay dos acordes en un compás, cada uno debe ocupar UN grupo de corcheas.
 - [ ] - El paso de un archivo de referencia a otro (sea por cambio de inversión, variación o modo) debe hacerse SIEMPRE según el **índice global de corcheas**, es decir, el cambio de archivo ocurre en la corchea global correspondiente (no en la corchea 0 local de un archivo), de forma alineada en todos los archivos de referencia.
 - [ ] - Todos los archivos de referencia tienen 32 compases (256 corcheas).
-- [ ] - Si el parser recibe un compás se exportan 8 corcheas, si recibe dos compases, se exportan 16, tres compases, se deben exportar exactamente 24 corcheas, etc. (No deben haber discrepancias entre la lógica interna de la app y lo que se ve visualizado en el piano roll).
+ - [x] - Si el parser recibe un compás se exportan 8 corcheas, si recibe dos compases, se exportan 16, tres compases, se deben exportar exactamente 24 corcheas, etc. (No deben haber discrepancias entre la lógica interna de la app y lo que se ve visualizado en el piano roll).
 - [x] - Al cambiar un ComboBox (modo o armonización) en el piano roll, la visualización del piano roll debe actualizarse inmediatamente.
 - [x] - Revisa que los ComboBox estén correctamente comunicados con sus funciones internas, y que la actualización de la UI sea instantánea.
 - [ ] - Si hay un cambio de modo en cualquier parte del compás, esto no debe afectar el numero de corcheas totales exportadas. (se cuentan las corcheas globales, así se cambie de archivos de referencia).
