@@ -1726,11 +1726,21 @@ def main():
 
     # Default mode combobox kept hidden for internal use
     modo_var = StringVar(value=MODOS_LABELS["Tradicional"])
-    modo_combo = ComboBox(root, variable=modo_var, values=list(MODOS_LABELS.values()))
+    modo_combo = ComboBox(
+        root,
+        variable=modo_var,
+        values=list(MODOS_LABELS.values()),
+        command=lambda *_: (_push_state(), actualizar_armonizacion()),
+    )
     modo_var.trace_add("write", lambda *a: (_push_state(), actualizar_armonizacion()))
 
     armon_var = StringVar(value=ARMONIZACION_LABELS[ARMONIZACIONES[0]])
-    armon_combo = ComboBox(root, variable=armon_var, values=list(ARMONIZACION_LABELS.values()))
+    armon_combo = ComboBox(
+        root,
+        variable=armon_var,
+        values=list(ARMONIZACION_LABELS.values()),
+        command=lambda *_: (_push_state(), actualizar_armonizacion()),
+    )
     armon_var.trace_add("write", lambda *a: (_push_state(), actualizar_armonizacion()))
 
     def get_modo() -> str:
