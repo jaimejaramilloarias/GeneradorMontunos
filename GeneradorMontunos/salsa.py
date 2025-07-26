@@ -281,7 +281,10 @@ def _indice_para_corchea(cor: int) -> int:
 
 
 def procesar_progresion_salsa(
-    texto: str, armonizacion_default: str | None = None, *, inicio_cor: int = 0
+    texto: str,
+    armonizacion_default: str | None = None,
+    *,
+    inicio_cor: int = 0,
 ) -> Tuple[List[Tuple[str, List[int], str, Optional[str]]], int]:
     """Procesa la progresión reconociendo extensiones específicas de salsa."""
 
@@ -301,10 +304,7 @@ def procesar_progresion_salsa(
 
     num_compases = len(segmentos)
 
-    # The ``bool`` flag indicates whether the bar originally contained two
-    # chords.  Both chords from that bar will have ``True`` so the caller can
-    # pick the appropriate MIDI template.
-    resultado: List[Tuple[str, List[int], str, Optional[str], bool]] = []
+    resultado: List[Tuple[str, List[int], str, Optional[str]]] = []
     indice_patron = _indice_para_corchea(inicio_cor)
     posicion = 0
     arm_actual = (armonizacion_default or "").capitalize()
@@ -372,7 +372,7 @@ def procesar_progresion_salsa(
             dur = g1 + g2
             indices = list(range(posicion, posicion + dur))
             nombre, arm, inv = acordes[0]
-            resultado.append((nombre, indices, arm, inv, False))
+            resultado.append((nombre, indices, arm, inv))
             posicion += dur
             indice_patron += 2
         elif len(acordes) == 2:
@@ -387,8 +387,8 @@ def procesar_progresion_salsa(
             indice_patron += 1
 
             (n1, a1, i1), (n2, a2, i2) = acordes
-            resultado.append((n1, indices1, a1, i1, True))
-            resultado.append((n2, indices2, a2, i2, True))
+            resultado.append((n1, indices1, a1, i1))
+            resultado.append((n2, indices2, a2, i2))
         elif len(acordes) == 0:
             continue
         else:
@@ -433,7 +433,7 @@ def montuno_salsa(
     if inversiones_manual is None:
         inversiones = []
         voz_grave_anterior = None
-        for idx, (cifrado, _, _, inv_forzado, _) in enumerate(asignaciones):
+        for idx, (cifrado, _, _, inv_forzado) in enumerate(asignaciones):
             if idx == 0:
                 inv = inv_forzado or inversion_inicial
                 pitch = get_bass_pitch(cifrado, inv)
@@ -453,7 +453,6 @@ def montuno_salsa(
     # Carga los midis de referencia una única vez por inversión y
     # construye las posiciones repetidas para toda la progresión
     plantillas: dict[str, pretty_midi.PrettyMIDI] = {}
-    plantillas_2c: dict[str, pretty_midi.PrettyMIDI] = {}
     parts = midi_ref.stem.split("_")
     base = "_".join(parts[:2]) if len(parts) >= 2 else midi_ref.stem
     if len(parts) >= 4:
@@ -461,29 +460,24 @@ def montuno_salsa(
     for inv in INVERSIONS:
         path = midi_ref.parent / f"{base}_{inv}_{variante}.mid"
         plantillas[inv] = pretty_midi.PrettyMIDI(str(path))
-        path2 = midi_ref.parent / f"{base}_{inv}_2chords.mid"
-        plantillas_2c[inv] = pretty_midi.PrettyMIDI(str(path2))
 
     # Número real de corcheas en la progresión según el patrón de clave
-    total_dest_cor = max(i for _, idxs, _, _, _ in asignaciones for i in idxs) + 1
+    total_dest_cor = max(i for _, idxs, _, _ in asignaciones for i in idxs) + 1
 
     grupos_por_inv, total_ref_cor, grid, bpm = _cargar_grupos_por_inversion(plantillas)
-    grupos_por_inv_2c, total_ref_cor_2c, grid2, bpm2 = _cargar_grupos_por_inversion(plantillas_2c)
-    if grid2 != grid:
-        raise ValueError("Las plantillas de 2 acordes tienen un grid diferente")
     pm_ref = plantillas[inversion_inicial]
     offset_ref = 0
 
     # Mapa corchea -> índice de acorde y límites de cada acorde
     mapa: Dict[int, int] = {}
     limites: Dict[int, int] = {}
-    for i, (_, idxs, _, _, _) in enumerate(asignaciones):
+    for i, (_, idxs, _, _) in enumerate(asignaciones):
         for ix in idxs:
             mapa[ix] = i
         limites[i] = idxs[-1] + 1
 
     inv_por_cor: Dict[int, str] = {}
-    for idx, (_, idxs, _, _, _) in enumerate(asignaciones):
+    for idx, (_, idxs, _, _) in enumerate(asignaciones):
         for ix in idxs:
             inv_por_cor[ix] = inversiones[idx]
 
@@ -493,10 +487,9 @@ def montuno_salsa(
         if inv is None:
             continue
         idx_acorde = mapa[cor]
-        acorde, _, _, _, dos = asignaciones[idx_acorde]
-        grupos_act = grupos_por_inv if not dos else grupos_por_inv_2c
-        total_ref_act = total_ref_cor if not dos else total_ref_cor_2c
-        ref_idx = (inicio_cor + cor + offset_ref) % total_ref_act
+        acorde, _, _, _ = asignaciones[idx_acorde]
+        grupos_act = grupos_por_inv
+        ref_idx = (inicio_cor + cor + offset_ref) % total_ref_cor
         for pos in grupos_act[inv][ref_idx]:
             pitch, es_aprox = traducir_nota(pos["name"], acorde)
             comienzo = asignaciones[idx_acorde][1][0]
