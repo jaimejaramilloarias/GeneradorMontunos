@@ -59,6 +59,16 @@ class ChordAutocomplete(ctk.CTkTextbox):
         start = max(last_space, last_bar, last_nl) + 1
         return prefix[start:]
 
+    def _previous_word(self) -> str:
+        """Return the previous chord token before the cursor."""
+        prefix = self.get("1.0", "insert")
+        prefix = prefix.rstrip()
+        last_space = prefix.rfind(" ")
+        last_bar = prefix.rfind("|")
+        last_nl = prefix.rfind("\n")
+        start = max(last_space, last_bar, last_nl) + 1
+        return prefix[start:]
+
     def _es_cifrado_valido(self, frag: str) -> bool:
         """Return ``True`` if ``frag`` is a valid root or chord name."""
         if frag in NOTAS:
@@ -167,6 +177,15 @@ class ChordAutocomplete(ctk.CTkTextbox):
             return
 
         if self._popup_type:
+            if event.char in {" ", "\n", "|"}:
+                token = self._previous_word()
+                if token and self._es_cifrado_valido(token):
+                    self._hide_popup()
+                    self._highlight()
+                    return
+            fragment = self._current_word()
+            suggestions = self._get_suggestions(fragment)
+            self._show_popup(suggestions, "chord")
             self._highlight()
             return
 
