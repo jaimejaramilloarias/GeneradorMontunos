@@ -657,16 +657,16 @@ def aplicar_armonizacion(
 
 
 def _grid_and_bpm(pm: pretty_midi.PrettyMIDI) -> Tuple[int, float, float]:
-    """Return total number of eighth notes, duration of an eighth and bpm.
+    """Return the reference length, eighth duration and BPM.
 
-    Tempo data in the MIDI file is ignored and a constant value of ``120.0`` BPM
-    is assumed.
+    All reference templates span exactly 32 bars (``256`` eighth-notes).  Tempo
+    information is ignored and ``120`` BPM is assumed to ensure every template
+    aligns to the same grid regardless of its internal timing.
     """
 
-    total = pm.get_end_time()
     bpm = 120.0
     grid = 60.0 / bpm / 2
-    cor = int(round(total / grid))
+    cor = 256
     return cor, grid, bpm
 
 
