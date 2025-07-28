@@ -13,6 +13,7 @@ from midi_utils_tradicional import (
     procesar_progresion_en_grupos,
 )
 from salsa import montuno_salsa
+from armonia_extendida import montuno_armonia_extendida
 
 
 # ==========================================================================
@@ -70,4 +71,5 @@ def montuno_tradicional(
 MODOS_DISPONIBLES = {
     "Tradicional": montuno_tradicional,
     "Salsa": montuno_salsa,
+    "Armonía extendida": montuno_armonia_extendida,
 }
