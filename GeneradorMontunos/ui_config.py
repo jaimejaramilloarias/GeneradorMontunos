@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from pathlib import Path
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Any
 
 CONFIG_FILE = Path.home() / ".cajonea2_prefs.json"
 
@@ -15,6 +15,8 @@ COLORS = {
     'note_selected': '#ff9800',
     'measure': '#cccccc',
 }
+
+PREFERENCES: Dict[str, Any] = {}
 
 
 def _load_font_from_file(root, name: str) -> Optional[str]:
@@ -42,26 +44,30 @@ def get_measure_font(root) -> ctk.CTkFont:
     return ctk.CTkFont(family="Monaco", size=14, weight="bold")
 
 
-def load_preferences() -> Dict:
+def load_preferences() -> Tuple[Dict, Dict]:
     """Load saved appearance preferences from disk.
 
-    Returns a dictionary with font settings if available."""
+    Returns a tuple ``(fonts, prefs)`` with any stored font settings and
+    miscellaneous preferences."""
     if CONFIG_FILE.exists():
         try:
             with CONFIG_FILE.open() as fh:
                 data = json.load(fh)
             COLORS.update(data.get('colors', {}))
-            return data.get('fonts', {})
+            PREFERENCES.update(data.get('prefs', {}))
+            return data.get('fonts', {}), PREFERENCES
         except Exception:
-            return {}
-    return {}
+            return {}, {}
+    return {}, {}
 
 
-def save_preferences(fonts: Optional[Dict] = None) -> None:
-    """Persist current colors and optional font settings to disk."""
+def save_preferences(fonts: Optional[Dict] = None, prefs: Optional[Dict] = None) -> None:
+    """Persist current colors, fonts and extra preferences to disk."""
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     data = {'colors': COLORS}
     if fonts:
         data['fonts'] = fonts
+    if prefs is not None:
+        data['prefs'] = prefs
     with CONFIG_FILE.open('w') as fh:
         json.dump(data, fh, indent=2)
