@@ -229,6 +229,7 @@ def montuno_armonia_extendida(
     inversiones_manual: list[str] | None = None,
     return_pm: bool = False,
     variante: str = "A",
+    asignaciones_custom: list[tuple[str, list[int], str | None]] | None = None,
 ) -> pretty_midi.PrettyMIDI | None:
     """Genera montuno usando las reglas de armonía extendida."""
 
@@ -239,7 +240,17 @@ def montuno_armonia_extendida(
     )
     import midi_utils
 
-    asignaciones, compases = procesar_progresion(progresion_texto, inicio_cor=inicio_cor)
+    if asignaciones_custom is None:
+        asignaciones, compases = procesar_progresion(
+            progresion_texto, inicio_cor=inicio_cor
+        )
+    else:
+        asignaciones = asignaciones_custom
+        compases = (
+            (max(i for _, idxs, *_ in asignaciones for i in idxs) + 7) // 8
+            if asignaciones
+            else 0
+        )
 
     if inversiones_manual is None:
         inversiones = []
