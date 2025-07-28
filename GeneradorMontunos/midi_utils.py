@@ -736,8 +736,9 @@ def exportar_montuno(
     *,
     inicio_cor: int = 0,
     debug: bool = False,
+    return_pm: bool = False,
     aleatorio: bool = False,
-) -> None:
+) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
     The resulting notes are trimmed so the output stops after the last
@@ -745,6 +746,8 @@ def exportar_montuno(
     index where this segment begins and is used to align the reference
     template so all segments stay perfectly in sync. ``armonizacion``
     specifies how notes should be duplicated (for example, in octaves).
+    Set ``return_pm`` to ``True`` to return the generated object instead of
+    writing it to disk.
     """
     notes, pm = leer_midi_referencia(midi_referencia_path)
     posiciones_base = obtener_posiciones_referencia(notes)
@@ -838,6 +841,9 @@ def exportar_montuno(
     )
     inst_out.notes = nuevas_notas
     pm_out.instruments.append(inst_out)
+    if return_pm:
+        return pm_out
+
     pm_out.write(str(output_path))
 
 
