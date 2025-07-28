@@ -7,6 +7,11 @@ from typing import List, Optional
 import re
 
 from voicings import INTERVALOS_TRADICIONALES, NOTAS, parsear_nombre_acorde
+from armonia_extendida import DICCIONARIO_EXTENDIDA
+
+# Placeholder replaced by :func:`main.get_modo` at runtime
+def get_modo() -> str:
+    return "Tradicional"
 
 
 class ChordAutocomplete(ctk.CTkTextbox):
@@ -48,6 +53,8 @@ class ChordAutocomplete(ctk.CTkTextbox):
     @property
     def _suffixes(self) -> List[str]:
         """Return the list of chord suffixes supported by the app."""
+        if get_modo() == "Armonía extendida":
+            return list(DICCIONARIO_EXTENDIDA.keys())
         return list(INTERVALOS_TRADICIONALES.keys())
 
     def _current_word(self) -> str:

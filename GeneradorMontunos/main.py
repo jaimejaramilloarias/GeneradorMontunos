@@ -77,7 +77,7 @@ ARMONIZACION_LABELS = {
 }
 ARMONIZACION_INV = {v: k for k, v in ARMONIZACION_LABELS.items()}
 
-MODOS_LABELS = {"Tradicional": "Trad.", "Salsa": "Salsa"}
+MODOS_LABELS = {"Tradicional": "Trad.", "Salsa": "Salsa", "Armonía extendida": "Ext."}
 MODOS_INV = {v: k for k, v in MODOS_LABELS.items()}
 
 # ---------------------------------------------------------------------------
@@ -1762,6 +1762,8 @@ def main():
 
     globals()["get_modo"] = get_modo
     globals()["get_armon"] = get_armon
+    import autocomplete
+    autocomplete.get_modo = get_modo
 
     actualizar_armonizacion()
 
