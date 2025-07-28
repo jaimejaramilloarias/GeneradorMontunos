@@ -444,7 +444,10 @@ def generar(
 
             else:
                 midi_ref_seg = BASE_DIR / "reference_midi_loops" / f"{cfg['midi_prefix']}_{variacion}.mid"
-                arg_extra = ARMONIZACION_INV.get(armon_combo.get(), armon_combo.get())
+                if modo_seg == "Armonía extendida":
+                    arg_extra = limpiar_inversion(inversion_var.get())
+                else:
+                    arg_extra = ARMONIZACION_INV.get(armon_combo.get(), armon_combo.get())
 
             if not midi_ref_seg.exists():
                 status_var.set(f"No se encontró {midi_ref_seg}")
