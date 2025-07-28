@@ -409,7 +409,7 @@ def montuno_salsa(
     inversion_inicial: str = "root",
     *,
     inicio_cor: int = 0,
-    inversiones_manual: Optional[List[str]] = None,
+    inversiones_manual: Optional[List[Tuple[str, int]]] = None,
     return_pm: bool = False,
     variante: str = "A",   # <-- NUEVO parámetro
     asignaciones_custom: Optional[List[Tuple[str, List[int], str, Optional[str]]]] = None,
@@ -441,6 +441,7 @@ def montuno_salsa(
     # --------------------------------------------------------------
     if inversiones_manual is None:
         inversiones = []
+        offsets = []
         voz_grave_anterior = None
         for idx, (cifrado, _, _, inv_forzado) in enumerate(asignaciones):
             if idx == 0:
@@ -455,9 +456,11 @@ def montuno_salsa(
                 else:
                     inv, pitch = seleccionar_inversion(voz_grave_anterior, cifrado)
             inversiones.append(inv)
+            offsets.append(0)
             voz_grave_anterior = pitch
     else:
-        inversiones = inversiones_manual
+        inversiones = [inv for inv, _ in inversiones_manual]
+        offsets = [off for _, off in inversiones_manual]
 
     # Carga los midis de referencia una única vez por inversión y
     # construye las posiciones repetidas para toda la progresión
@@ -486,9 +489,11 @@ def montuno_salsa(
         limites[i] = idxs[-1] + 1
 
     inv_por_cor: Dict[int, str] = {}
+    off_por_cor: Dict[int, int] = {}
     for idx, (_, idxs, _, _) in enumerate(asignaciones):
         for ix in idxs:
             inv_por_cor[ix] = inversiones[idx]
+            off_por_cor[ix] = offsets[idx]
 
     notas_finales: List[pretty_midi.Note] = []
     for cor in range(total_dest_cor):
@@ -499,8 +504,10 @@ def montuno_salsa(
         acorde, _, _, _ = asignaciones[idx_acorde]
         grupos_act = grupos_por_inv
         ref_idx = (inicio_cor + cor + offset_ref) % total_ref_cor
+        off = off_por_cor.get(cor, 0)
         for pos in grupos_act[inv][ref_idx]:
             pitch, es_aprox = traducir_nota(pos["name"], acorde)
+            pitch += off * 12
             comienzo = asignaciones[idx_acorde][1][0]
             if CONVERTIR_APROX_A_ESTRUCT and es_aprox and cor == comienzo:
                 pitch = _ajustar_a_estructural_mas_cercano(

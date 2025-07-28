@@ -176,7 +176,11 @@ INV_ORDER = [v for _, v in INVERSIONES]
 # allowing these utilities to be tested standalone.
 # ---------------------------------------------------------------------------
 
-current_inversions: List[str] = []
+# Store inversion positions as integers so each step can span multiple
+# octaves. ``0`` corresponds to "root" at the base register, ``1`` to
+# "third", ``2`` to "fifth" and so on.  Negative values are allowed to
+# move inversions below the default range.
+current_inversions: List[int] = []
 chord_styles: List[str] = []
 chord_armos: List[str] = []
 
@@ -464,23 +468,30 @@ def generar(
             kwargs = {"asignaciones_custom": asign_seg}
             if modo_seg == "Salsa":
                 if inversiones_custom is not None:
-                    inv_seg = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
+                    inv_seg_idx = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
                     inv_idx += len(asign_seg)
-                    if inv_seg:
-                        kwargs["inversiones_manual"] = inv_seg
+                    if inv_seg_idx:
+                        kwargs["inversiones_manual"] = [
+                            (INV_ORDER[i % len(INV_ORDER)], i // len(INV_ORDER))
+                            for i in inv_seg_idx
+                        ]
             else:
                 if inversiones_custom is not None:
-                    inv_seg = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
+                    inv_seg_idx = inversiones_custom[inv_idx : inv_idx + len(asign_seg)]
                     inv_idx += len(asign_seg)
-                    if inv_seg:
+                    if inv_seg_idx:
                         suf_map = {"root": "1", "third": "3", "fifth": "5", "seventh": "7"}
                         asign_mod = []
-                        for (nombre, idxs, arm, *rest), inv in zip(asign_seg, inv_seg):
-                            if inv and inv != "root":
-                                nombre = f"{nombre}/{suf_map.get(inv, '1')}"
+                        offsets_seg = []
+                        for (nombre, idxs, arm, *rest), idx_val in zip(asign_seg, inv_seg_idx):
+                            inv_name = INV_ORDER[idx_val % len(INV_ORDER)]
+                            if inv_name != "root":
+                                nombre = f"{nombre}/{suf_map.get(inv_name, '1')}"
                             asign_mod.append((nombre, idxs, arm))
+                            offsets_seg.append((idx_val // len(INV_ORDER)) * 12)
                         asign_seg = asign_mod
                         kwargs["asignaciones_custom"] = asign_seg
+                        kwargs["voicing_offsets"] = offsets_seg
                 if armonias_custom is not None:
                     armon_seg = [armonias_custom[i] for i in idxs_seg]
                 else:
@@ -743,7 +754,7 @@ def main():
         while len(chord_armos) > len(acordes):
             chord_armos.pop()
         while len(current_inversions) < len(acordes):
-            current_inversions.append("root")
+            current_inversions.append(0)
         while len(current_inversions) > len(acordes):
             current_inversions.pop()
 
@@ -930,16 +941,14 @@ def main():
         _restore_state(st)
 
     def _shift_all_inversions(delta: int) -> None:
-        """Shift every chord inversion by ``delta`` steps circularly."""
+        """Shift every chord inversion by ``delta`` steps (wrap every three)."""
         if not current_inversions:
             return
         _push_state()
         for i, inv in enumerate(current_inversions):
-            if inv in INV_ORDER:
-                idx = INV_ORDER.index(inv)
-                current_inversions[i] = INV_ORDER[(idx + delta) % len(INV_ORDER)]
+            current_inversions[i] = inv + delta
         if current_inversions:
-            inversion_var.set(current_inversions[0])
+            inversion_var.set(INV_ORDER[current_inversions[0] % len(INV_ORDER)])
         _update_text_from_selections()
         actualizar_visualizacion()
 
@@ -1298,15 +1307,13 @@ def main():
                 fill="#ffcc33",
                 font=(general_font.cget("family"), general_font.cget("size"), "bold"),
             )
-            var_inv = StringVar(value=label_map[current_inversions[idx]])
+            var_inv = StringVar(value=label_map[INV_ORDER[current_inversions[idx] % len(INV_ORDER)]])
 
             def _shift_inv(delta: int, i: int = idx) -> None:
                 _push_state()
                 cur = current_inversions[i]
-                if cur in INV_ORDER:
-                    idx_inv = INV_ORDER.index(cur)
-                    current_inversions[i] = INV_ORDER[(idx_inv + delta) % len(INV_ORDER)]
-                    var_inv.set(label_map[current_inversions[i]])
+                current_inversions[i] = cur + delta
+                var_inv.set(label_map[INV_ORDER[current_inversions[i] % len(INV_ORDER)]])
                 actualizar_visualizacion()
 
             # All widgets go through _register_widget to ensure proper cleanup
@@ -1413,7 +1420,7 @@ def main():
         while len(chord_armos) > num_chords:
             chord_armos.pop()
 
-        default_inv = _calc_default_inversions(asign)
+        default_inv = [INV_ORDER.index(v) for v in _calc_default_inversions(asign)]
         while len(current_inversions) < num_chords:
             current_inversions.append(default_inv[len(current_inversions)])
         while len(current_inversions) > num_chords:

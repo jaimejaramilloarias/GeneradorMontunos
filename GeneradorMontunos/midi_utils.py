@@ -740,6 +740,7 @@ def exportar_montuno(
     debug: bool = False,
     return_pm: bool = False,
     aleatorio: bool = False,
+    voicing_offsets: Optional[List[int]] = None,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
@@ -793,6 +794,12 @@ def exportar_montuno(
         )
 
     limite = limite_cor * grid
+
+    if voicing_offsets:
+        voicings = [
+            [p + voicing_offsets[i] for p in v]
+            for i, v in enumerate(voicings)
+        ]
 
     nuevas_notas = generar_notas_mixtas(
         posiciones, voicings, asignaciones, grid, notas_base=notas_base, debug=debug

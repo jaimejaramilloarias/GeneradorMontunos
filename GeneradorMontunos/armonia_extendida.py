@@ -382,7 +382,7 @@ def montuno_armonia_extendida(
     inversion_inicial: str = "root",
     *,
     inicio_cor: int = 0,
-    inversiones_manual: list[str] | None = None,
+    inversiones_manual: list[tuple[str, int]] | None = None,
     return_pm: bool = False,
     variante: str = "A",
     asignaciones_custom: list[tuple[str, list[int], str | None]] | None = None,
@@ -410,6 +410,7 @@ def montuno_armonia_extendida(
 
     if inversiones_manual is None:
         inversiones = []
+        offsets: list[int] = []
         voz_grave_anterior = None
         for idx, (cifrado, _, inv_forzado) in enumerate(asignaciones):
             if idx == 0:
@@ -424,21 +425,25 @@ def montuno_armonia_extendida(
                 else:
                     inv, pitch = seleccionar_inversion(voz_grave_anterior, cifrado)
             inversiones.append(inv)
+            offsets.append(0)
             voz_grave_anterior = pitch
     else:
-        inversiones = inversiones_manual
+        inversiones = [inv for inv, _ in inversiones_manual]
+        offsets = [off for _, off in inversiones_manual]
 
     inv_map = {"root": "fundamental", "third": "1a_inv", "fifth": "2a_inv"}
     tipo_map = {3: "triada", 4: "7_6", 5: "9", 6: "11", 7: "13"}
 
     voicings = []
+    offs = []
     asign_simple = []
-    for (nombre, idxs, _), inv in zip(asignaciones, inversiones):
+    for idx_i, ((nombre, idxs, _), inv) in enumerate(zip(asignaciones, inversiones)):
         root, suf = parsear_nombre_acorde(nombre)
         intervalos = DICCIONARIO_EXTENDIDA[suf]
         tipo = tipo_map[len(intervalos)]
         pattern = VOICINGS_EXTENDIDA[tipo][inv_map[inv]]
         voicings.append(get_midi_numbers(root, intervalos, pattern))
+        offs.append(offsets[idx_i] * 12)
         asign_simple.append((nombre, idxs, ""))
 
     return midi_utils.exportar_montuno(
@@ -449,4 +454,5 @@ def montuno_armonia_extendida(
         output,
         inicio_cor=inicio_cor,
         return_pm=return_pm,
+        voicing_offsets=offs,
     )
