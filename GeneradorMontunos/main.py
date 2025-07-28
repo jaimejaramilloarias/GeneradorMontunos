@@ -442,12 +442,19 @@ def generar(
                 midi_ref_seg = BASE_DIR / "reference_midi_loops" / f"salsa_{clave_tag_m}_{inversion}_{sufijo}.mid"
                 arg_extra = inversion
 
+            elif modo_seg == "Armonía extendida":
+                clave_tag_m = cfg["midi_prefix"].split("_")[1]
+                inversion = limpiar_inversion(inversion_var.get())
+                midi_ref_seg = (
+                    BASE_DIR
+                    / "reference_midi_loops"
+                    / f"salsa_{clave_tag_m}_{inversion}_2chords.mid"
+                )
+                arg_extra = inversion
+
             else:
                 midi_ref_seg = BASE_DIR / "reference_midi_loops" / f"{cfg['midi_prefix']}_{variacion}.mid"
-                if modo_seg == "Armonía extendida":
-                    arg_extra = limpiar_inversion(inversion_var.get())
-                else:
-                    arg_extra = ARMONIZACION_INV.get(armon_combo.get(), armon_combo.get())
+                arg_extra = ARMONIZACION_INV.get(armon_combo.get(), armon_combo.get())
 
             if not midi_ref_seg.exists():
                 status_var.set(f"No se encontró {midi_ref_seg}")
@@ -681,11 +688,15 @@ def main():
         if modo == "Salsa":
             sufijos = ['A', 'B', 'C', 'D']
             import random
-            idx = random.randint(0, 3)  # O usa tu lógica de seed si la tienes
+            idx = random.randint(0, 3)
             sufijo = sufijos[idx]
             clave_tag = cfg["midi_prefix"].split("_")[1]
             inversion = limpiar_inversion(inversion_var.get())
             path = str(BASE_DIR / "reference_midi_loops" / f"salsa_{clave_tag}_{inversion}_{sufijo}.mid")
+        elif modo == "Armonía extendida":
+            clave_tag = cfg["midi_prefix"].split("_")[1]
+            inversion = limpiar_inversion(inversion_var.get())
+            path = str(BASE_DIR / "reference_midi_loops" / f"salsa_{clave_tag}_{inversion}_2chords.mid")
         else:
             path = str(BASE_DIR / "reference_midi_loops" / f"{cfg['midi_prefix']}_{variacion}.mid")
 
