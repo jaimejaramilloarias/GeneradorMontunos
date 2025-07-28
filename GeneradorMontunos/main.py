@@ -592,7 +592,7 @@ def main():
     ctk.set_appearance_mode("dark")
     root.title("Generador de Montunos")
 
-    fonts_cfg = load_preferences()
+    fonts_cfg, prefs = load_preferences()
     root.configure(fg_color=COLORS['bg'])
 
     # Load button icons and store references on the root to avoid garbage
@@ -1725,7 +1725,8 @@ def main():
                         'family': measure_font.cget('family'),
                         'size': measure_font.cget('size'),
                     },
-                }
+                },
+                prefs
             )
             win.destroy()
 
@@ -1764,15 +1765,21 @@ def main():
         actualizar_visualizacion()
         _update_text_from_selections()
 
-    # Default mode combobox kept hidden for internal use
-    modo_var = StringVar(value=MODOS_LABELS["Tradicional"])
+    # Default mode combobox kept hidden for internal use. Persist last selection
+    modo_var = StringVar(value=prefs.get('modo', MODOS_LABELS["Tradicional"]))
+
+    def _on_modo_change(*_):
+        _push_state()
+        prefs['modo'] = modo_var.get()
+        actualizar_armonizacion()
+
     modo_combo = ComboBox(
         root,
         variable=modo_var,
         values=list(MODOS_LABELS.values()),
-        command=lambda *_: (_push_state(), actualizar_armonizacion()),
+        command=_on_modo_change,
     )
-    modo_var.trace_add("write", lambda *a: (_push_state(), actualizar_armonizacion()))
+    modo_var.trace_add("write", _on_modo_change)
 
     armon_var = StringVar(value=ARMONIZACION_LABELS[ARMONIZACIONES[0]])
     armon_combo = ComboBox(
@@ -1978,7 +1985,8 @@ def main():
                     'family': measure_font.cget('family'),
                     'size': measure_font.cget('size'),
                 },
-            }
+            },
+            prefs
         )
         if MIDI_PORT is not None:
             try:
