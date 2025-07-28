@@ -29,6 +29,7 @@ def aplicar_voicings_a_referencia(
     asignaciones: List[Tuple[str, List[int]]],
     grid_seg: float,
     *,
+    notas_base: List[int] = NOTAS_BASE,
     debug: bool = False,
 ) -> Tuple[List[pretty_midi.Note], int]:
     """Reemplaza las notas de referencia por los voicings generados.
@@ -55,7 +56,7 @@ def aplicar_voicings_a_referencia(
                 logger.debug("Corchea %s: silencio", corchea)
             continue  # silencio
         voicing = sorted(voicings[mapa[corchea]])
-        orden = NOTAS_BASE.index(pos["pitch"])  # posición dentro del voicing
+        orden = notas_base.index(pos["pitch"])  # posición dentro del voicing
         # Preserve the velocity of the reference note so dynamics match
         nueva_nota = pretty_midi.Note(
             velocity=pos["velocity"],
@@ -502,6 +503,7 @@ def generar_notas_mixtas(
     asignaciones: List[Tuple[str, List[int], str]],
     grid_seg: float,
     *,
+    notas_base: List[int] = NOTAS_BASE,
     debug: bool = False,
 ) -> List[pretty_midi.Note]:
     """Generate notes applying per-chord harmonisation.
@@ -608,7 +610,7 @@ def generar_notas_mixtas(
                 notas = [base + 12, agregada - 24]
         else:
             # Procesamiento estandar del voicing base
-            orden = NOTAS_BASE.index(pos["pitch"])
+            orden = notas_base.index(pos["pitch"])
             base_pitch = voicing[orden]
 
             if arm == "octavas":
@@ -742,7 +744,7 @@ def exportar_montuno(
     should be duplicated (for example, in octaves).
     """
     notes, pm = leer_midi_referencia(midi_referencia_path)
-    posiciones_base = obtener_posiciones_referencia(notes)
+    posiciones_base, notas_base = obtener_posiciones_referencia(notes)
     total_cor_ref, grid, bpm = _grid_and_bpm(pm)
 
     if debug:
@@ -784,7 +786,7 @@ def exportar_montuno(
     limite = limite_cor * grid
 
     nuevas_notas = generar_notas_mixtas(
-        posiciones, voicings, asignaciones, grid, debug=debug
+        posiciones, voicings, asignaciones, grid, notas_base=notas_base, debug=debug
     )
 
     # Avoid overlapping notes at the same pitch which can cause MIDI
