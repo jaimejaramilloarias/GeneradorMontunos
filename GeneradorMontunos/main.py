@@ -475,8 +475,9 @@ def generar(
                     armon_seg = [armonias_custom[i] for i in idxs_seg]
                 else:
                     armon_seg = [chord_armos[i] for i in idxs_seg]
-                kwargs["armonizaciones_custom"] = armon_seg
-                kwargs["aleatorio"] = True
+                if modo_seg == "Tradicional":
+                    kwargs["armonizaciones_custom"] = armon_seg
+                    kwargs["aleatorio"] = True
             try:
                 funcion(
                     "",
