@@ -386,6 +386,7 @@ def montuno_armonia_extendida(
     return_pm: bool = False,
     variante: str = "A",
     asignaciones_custom: list[tuple[str, list[int], str | None]] | None = None,
+    voicing_offsets: list[int] | None = None,
 ) -> pretty_midi.PrettyMIDI | None:
     """Genera montuno usando las reglas de armonía extendida."""
 
@@ -445,6 +446,9 @@ def montuno_armonia_extendida(
         voicings.append(get_midi_numbers(root, intervalos, pattern))
         offs.append(offsets[idx_i] * 12)
         asign_simple.append((nombre, idxs, ""))
+
+    if voicing_offsets is not None:
+        offs = voicing_offsets
 
     return midi_utils.exportar_montuno(
         midi_ref,
