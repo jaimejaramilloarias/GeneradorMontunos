@@ -145,8 +145,15 @@ def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=3):
 
 
 def parsear_nombre_acorde(nombre: str) -> tuple[str, str]:
-    """Devuelve ``(root, sufijo)`` a partir de ``nombre``."""
-    m = re.match(r"^([A-G](?:b|#)?)(.*)$", nombre)
+    """Devuelve ``(root, sufijo)`` a partir de ``nombre``.
+
+    La notación ``/3`` o ``/5`` al final para forzar una inversión no forma
+    parte del sufijo, por lo que se elimina antes de validar.
+    """
+
+    base = re.sub(r"/[1357]$", "", nombre)
+
+    m = re.match(r"^([A-G](?:b|#)?)(.*)$", base)
     if not m:
         raise ValueError(f"Acorde no reconocido: {nombre}")
     root, suf = m.groups()
