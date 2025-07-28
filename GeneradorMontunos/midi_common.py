@@ -12,6 +12,7 @@ __all__ = [
     "NOTAS_BASE",
     "leer_midi_referencia",
     "obtener_posiciones_referencia",
+    "detectar_notas_base",
     "construir_posiciones_secuenciales",
     "construir_posiciones_por_ventanas",
 ]
@@ -34,12 +35,25 @@ def leer_midi_referencia(midi_path: Path):
     return notes, pm
 
 
-def obtener_posiciones_referencia(notes) -> List[dict]:
-    """Return pitch, start, end and velocity for baseline notes in the reference."""
+def detectar_notas_base(notes) -> List[int]:
+    """Return the sorted set of pitches present in ``notes``."""
+    base = sorted({int(n.pitch) for n in notes if n.pitch > 0})
+    logger.debug("Notas base detectadas: %s", base)
+    return base
+
+
+def obtener_posiciones_referencia(
+    notes, notas_base: List[int] | None = None
+) -> tuple[list[dict], list[int]]:
+    """Return rhythmic info for the reference template and its base pitches."""
+
+    if notas_base is None:
+        notas_base = detectar_notas_base(notes)
+
     posiciones = []
     for n in notes:
         pitch = int(n.pitch)
-        if pitch in [int(p) for p in NOTAS_BASE]:
+        if pitch in [int(p) for p in notas_base]:
             posiciones.append(
                 {
                     "pitch": pitch,
@@ -54,7 +68,7 @@ def obtener_posiciones_referencia(notes) -> List[dict]:
     logger.debug("Notas base encontradas: %s", len(posiciones))
     ejemplo = [(p["pitch"], p["start"]) for p in posiciones[:10]]
     logger.debug("Ejemplo primeros 10: %s", ejemplo)
-    return posiciones
+    return posiciones, notas_base
 
 
 def construir_posiciones_secuenciales(
