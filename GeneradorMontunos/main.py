@@ -1363,7 +1363,14 @@ def main():
                     _push_state()
                     nueva_arm = arm_rev[choice]
                     if chord_styles[i] == "Tradicional":
-                        chord_armos[i] = nueva_arm
+                        n = len(chord_armos)
+                        next_change = n
+                        for j in range(i + 1, n):
+                            if chord_armos[j] != chord_armos[i]:
+                                next_change = j
+                                break
+                        for j in range(i, next_change):
+                            chord_armos[j] = nueva_arm
                     actualizar_visualizacion()
 
                 # Arm menus are dynamic; ensure they are registered as well

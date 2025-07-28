@@ -6,8 +6,11 @@ from tkinter import Listbox, END, ACTIVE
 from typing import List, Optional
 import re
 
-from voicings import INTERVALOS_TRADICIONALES, NOTAS, parsear_nombre_acorde
-from armonia_extendida import DICCIONARIO_EXTENDIDA
+from voicings import INTERVALOS_TRADICIONALES, NOTAS, parsear_nombre_acorde as parsear_nombre_acorde_trad
+from armonia_extendida import (
+    DICCIONARIO_EXTENDIDA,
+    parsear_nombre_acorde as parsear_nombre_acorde_ext,
+)
 
 # Placeholder replaced by :func:`main.get_modo` at runtime
 def get_modo() -> str:
@@ -27,10 +30,19 @@ class ChordAutocomplete(ctk.CTkTextbox):
         self._roots = sorted(NOTAS.keys(), key=lambda x: (len(x), x))
 
         # Precompile regular expressions for syntax highlighting
-        suf_regex = "|".join(
+        suf_regex_trad = "|".join(
             sorted((re.escape(s) for s in INTERVALOS_TRADICIONALES.keys()), key=len, reverse=True)
         )
-        self._chord_regex = re.compile(rf"(?P<root>[A-G](?:b|#)?)(?P<suffix>{suf_regex})?")
+        suf_regex_ext = "|".join(
+            sorted((re.escape(s) for s in DICCIONARIO_EXTENDIDA.keys()), key=len, reverse=True)
+        )
+
+        self._chord_regex_trad = re.compile(
+            rf"(?P<root>[A-G](?:b|#)?)(?P<suffix>{suf_regex_trad})?"
+        )
+        self._chord_regex_ext = re.compile(
+            rf"(?P<root>[A-G](?:b|#)?)(?P<suffix>{suf_regex_ext})?"
+        )
 
         # Configure syntax highlighting tags.  The root and suffix use the
         # same yellow tone as the small chord labels shown on the piano roll.
@@ -46,6 +58,19 @@ class ChordAutocomplete(ctk.CTkTextbox):
         self.bind("<Down>", self._on_down)
         self.bind("<Up>", self._on_up)
         self.bind("<Button-1>", lambda e: self._hide_popup())
+
+    def _parse_acorde(self, frag: str):
+        """Parse ``frag`` according to the current mode."""
+        if get_modo() == "Armonía extendida":
+            return parsear_nombre_acorde_ext(frag)
+        return parsear_nombre_acorde_trad(frag)
+
+    @property
+    def _chord_regex(self) -> re.Pattern:
+        """Return the appropriate regex for the current mode."""
+        if get_modo() == "Armonía extendida":
+            return self._chord_regex_ext
+        return self._chord_regex_trad
 
     # ------------------------------------------------------------------
     # Suggestion logic
@@ -81,7 +106,7 @@ class ChordAutocomplete(ctk.CTkTextbox):
         if frag in NOTAS:
             return True
         try:
-            parsear_nombre_acorde(frag)
+            self._parse_acorde(frag)
             return True
         except Exception:
             return False
@@ -166,7 +191,7 @@ class ChordAutocomplete(ctk.CTkTextbox):
             if re.fullmatch(r"[|:]+", tok):
                 return True
             try:
-                parsear_nombre_acorde(tok)
+                self._parse_acorde(tok)
                 return True
             except Exception:
                 return False
