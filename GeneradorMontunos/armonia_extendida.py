@@ -105,43 +105,191 @@ DICCIONARIO_EXTENDIDA = {
 
 # Fórmulas de voicing para cada tipo de acorde e inversión
 VOICINGS_EXTENDIDA = {
-    "triada": {
-        "fundamental": [0, 1, 2, 12, 13, 14, 24],
-        "1a_inv": [1, 2, 12, 13, 14, 24, 25],
-        "2a_inv": [2, 12, 13, 14, 24, 25, 26],
+    'triada': {
+        'fundamental': [
+            ('n1',    'C3'),
+            ('n2',    'E3'),
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n1+24', 'C5'),
+        ],
+        '1a_inv': [
+            ('n2',    'E3'),
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n1+24', 'C5'),
+            ('n2+24', 'E5'),
+        ],
+        '2a_inv': [
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n1+24', 'C5'),
+            ('n2+24', 'E5'),
+            ('n3+24', 'G5'),
+        ],
     },
-    "7": {
-        "fundamental": [0, 2, 3, 12, 13, 14, 24],
-        "1a_inv": [1, 3, 12, 13, 14, 15, 25],
-        "2a_inv": [2, 12, 13, 14, 15, 25, 26],
+    '7_6': {
+        'fundamental': [
+            ('n1',    'C3'),
+            ('n3',    'E3'),
+            ('n4',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n1+24', 'C5'),
+        ],
+        '1a_inv': [
+            ('n2',    'E3'),
+            ('n4',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n4+12', 'C5'),
+            ('n2+24', 'E5'),
+        ],
+        '2a_inv': [
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n4+12', 'C5'),
+            ('n2+24', 'E5'),
+            ('n3+24', 'G5'),
+        ],
     },
-    "9": {
-        "fundamental": [0, 2, 3, 13, 14, 15, 16],
-        "1a_inv": [1, 12, 4, 13, 14, 15, 16],
-        "2a_inv": [2, 12, 13, 14, 15, 16, 26],
+    '9': {
+        'fundamental': [
+            ('n1',    'C3'),
+            ('n3',    'E3'),
+            ('n4',    'G3'),
+            ('n2+12', 'C4'),
+            ('n3+12', 'E4'),
+            ('n4+12', 'G4'),
+            ('n5+12', 'C5'),
+        ],
+        '1a_inv': [
+            ('n2',    'E3'),
+            ('n1+12', 'G3'),
+            ('n5',    'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n4+12', 'C5'),
+            ('n5+12', 'E5'),
+        ],
+        '2a_inv': [
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n3+12', 'G4'),
+            ('n4+12', 'C5'),
+            ('n5+12', 'E5'),
+            ('n3+24', 'G5'),
+        ],
     },
-    "11": {
-        "fundamental": [0, 2, 3, 13, 5, 15, 16],
-        "1a_inv": [1, 12, 4, 5, 15, 16, 17],
-        "2a_inv": [2, 12, 13, 15, 16, 17, 27],
+    '11': {
+        'fundamental': [
+            ('n1',    'C3'),
+            ('n3',    'E3'),
+            ('n4',    'G3'),
+            ('n2+12', 'C4'),
+            ('n6',    'E4'),
+            ('n4+12', 'G4'),
+            ('n5+12', 'C5'),
+        ],
+        '1a_inv': [
+            ('n2',    'E3'),
+            ('n1+12', 'G3'),
+            ('n5',    'C4'),
+            ('n6',    'E4'),
+            ('n4+12', 'G4'),
+            ('n5+12', 'C5'),
+            ('n6+12', 'E5'),
+        ],
+        '2a_inv': [
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n4+12', 'G4'),
+            ('n5+12', 'C5'),
+            ('n6+12', 'E5'),
+            ('n4+24', 'G5'),
+        ],
     },
-    "13": {
-        "fundamental": [0, 2, 3, 4, 14, 6, 16],
-        "1a_inv": [1, 2, 12, 4, 5, 6, 16],
-        "2a_inv": [2, 12, 13, 15, 16, 5, 6],
+    '13': {
+        'fundamental': [
+            ('n1',    'C3'),
+            ('n3',    'E3'),
+            ('n4',    'G3'),
+            ('n5',    'C4'),
+            ('n3+12', 'E4'),
+            ('n7',    'G4'),
+            ('n5+12', 'C5'),
+        ],
+        '1a_inv': [
+            ('n2',    'E3'),
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n5',    'E4'),
+            ('n6',    'G4'),
+            ('n7',    'C5'),
+            ('n5+12', 'E5'),
+        ],
+        '2a_inv': [
+            ('n3',    'G3'),
+            ('n1+12', 'C4'),
+            ('n2+12', 'E4'),
+            ('n4+12', 'G4'),
+            ('n5+12', 'C5'),
+            ('n6',    'E5'),
+            ('n7',    'G5'),
+        ],
     },
 }
 
-def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=3):
-    base_midi = NOTA_A_MIDI[base_note] + 12 * octava_base
-    res = []
-    for v in voicing_pattern:
-        idx = v % 12  # index en la lista de intervalos (ajusta si tienes más de 12 notas, pero para 7 siempre vale)
-        octave = v // 12
-        semitonos = intervalos[idx] + 12 * octave
-        midi_nota = base_midi + semitonos
-        res.append(midi_nota)
-    return res
+def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
+    """Convierte ``voicing_pattern`` en notas MIDI absolutas."""
+
+    base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
+    base_ref = NOTA_A_MIDI['C'] + 12 * octava_base
+    resultado = []
+    for token, ref in voicing_pattern:
+        m = re.match(r"n(\d+)(?:\+(\d+))?", token)
+        if not m:
+            raise ValueError(f"Patrón inválido: {token}")
+        idx = int(m.group(1)) - 1
+        extra = int(m.group(2) or 0)
+        ref_pitch = pretty_midi.note_name_to_number(ref)
+        shift = ref_pitch - (base_ref + intervalos[idx] + extra)
+        midi = base_root + intervalos[idx] + extra + shift
+        resultado.append(midi)
+    return resultado
+
+
+def get_midi_numbers_debug(base_note, intervalos, voicing_pattern, octava_base=4):
+    """Como :func:`get_midi_numbers` pero conserva la información de depuración."""
+
+    base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
+    base_ref = NOTA_A_MIDI['C'] + 12 * octava_base
+    resultado = []
+    debug = []
+    for token, ref in voicing_pattern:
+        m = re.match(r"n(\d+)(?:\+(\d+))?", token)
+        if not m:
+            raise ValueError(f"Patrón inválido: {token}")
+        idx = int(m.group(1)) - 1
+        extra = int(m.group(2) or 0)
+        ref_pitch = pretty_midi.note_name_to_number(ref)
+        shift = ref_pitch - (base_ref + intervalos[idx] + extra)
+        midi = base_root + intervalos[idx] + extra + shift
+        resultado.append(midi)
+        debug.append((ref, token, midi))
+    return resultado, debug
 
 
 def parsear_nombre_acorde(nombre: str) -> tuple[str, str]:
@@ -280,7 +428,7 @@ def montuno_armonia_extendida(
         inversiones = inversiones_manual
 
     inv_map = {"root": "fundamental", "third": "1a_inv", "fifth": "2a_inv"}
-    tipo_map = {3: "triada", 4: "7", 5: "9", 6: "11", 7: "13"}
+    tipo_map = {3: "triada", 4: "7_6", 5: "9", 6: "11", 7: "13"}
 
     voicings = []
     asign_simple = []
