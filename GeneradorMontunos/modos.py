@@ -31,6 +31,7 @@ def montuno_tradicional(
     aleatorio: bool = False,
     armonizaciones_custom: Optional[List[str]] = None,
     asignaciones_custom: Optional[List[Tuple[str, List[int], str]]] = None,
+    voicing_offsets: Optional[List[int]] = None,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a montuno in the traditional style.
 
@@ -65,6 +66,7 @@ def montuno_tradicional(
         inicio_cor=inicio_cor,
         return_pm=return_pm,
         aleatorio=aleatorio,
+        voicing_offsets=voicing_offsets,
     )
 
 
