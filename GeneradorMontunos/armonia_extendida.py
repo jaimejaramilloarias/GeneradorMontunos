@@ -511,8 +511,8 @@ def montuno_armonia_extendida(
         inicio_cor=inicio_cor,
         return_pm=return_pm,
         voicing_offsets=offs,
-        # Always traverse the reference sequentially as in the other modes
-        aleatorio=False,
+        # Traverse the reference in 2-bar windows to match the other modes
+        aleatorio=True,
         parse_fn=parsear_nombre_acorde,
         interval_dict=DICCIONARIO_EXTENDIDA,
         # Use note-by-note replacement so the rhythmic pattern from the
