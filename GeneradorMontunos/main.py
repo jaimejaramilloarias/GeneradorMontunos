@@ -977,6 +977,7 @@ def main():
             current_inversions[i] = inv + delta
         if current_inversions:
             inversion_var.set(INV_ORDER[current_inversions[0] % len(INV_ORDER)])
+            actualizar_midi()
         _update_text_from_selections()
         actualizar_visualizacion()
 
@@ -1342,6 +1343,9 @@ def main():
                 cur = current_inversions[i]
                 current_inversions[i] = cur + delta
                 var_inv.set(label_map[INV_ORDER[current_inversions[i] % len(INV_ORDER)]])
+                if i == 0:
+                    inversion_var.set(INV_ORDER[current_inversions[0] % len(INV_ORDER)])
+                    actualizar_midi()
                 _update_text_from_selections()
                 actualizar_visualizacion()
 

@@ -263,9 +263,15 @@ def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
     definen el acorde (por ejemplo ``[0, 3, 7, 10]`` para ``m7``).  Los
     elementos de ``voicing_pattern`` indican qué intervalo usar (``n1``,
     ``n2``, ...), opcionalmente desplazado por octavas con ``+12``.
+    ``base_note`` puede ser la nota en texto (``"C"``) o la clase de
+    tono MIDI como entero.
     """
 
-    base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
+    if isinstance(base_note, str):
+        base_root = NOTA_A_MIDI[base_note]
+    else:
+        base_root = int(base_note) % 12
+    base_root += 12 * octava_base
     resultado = []
     for token, _ in voicing_pattern:
         m = re.match(r"n(\d+)(?:\+(\d+))?", token)
@@ -285,7 +291,11 @@ def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
 def get_midi_numbers_debug(base_note, intervalos, voicing_pattern, octava_base=4):
     """Como :func:`get_midi_numbers` pero conserva la información de depuración."""
 
-    base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
+    if isinstance(base_note, str):
+        base_root = NOTA_A_MIDI[base_note]
+    else:
+        base_root = int(base_note) % 12
+    base_root += 12 * octava_base
     resultado = []
     debug = []
     for token, ref in voicing_pattern:
@@ -304,8 +314,8 @@ def get_midi_numbers_debug(base_note, intervalos, voicing_pattern, octava_base=4
     return resultado, debug
 
 
-def parsear_nombre_acorde(nombre: str) -> tuple[str, str]:
-    """Devuelve ``(root, sufijo)`` a partir de ``nombre``.
+def parsear_nombre_acorde(nombre: str) -> tuple[int, str]:
+    """Devuelve ``(root_pc, sufijo)`` a partir de ``nombre``.
 
     La notación ``/3`` o ``/5`` al final para forzar una inversión no forma
     parte del sufijo, por lo que se elimina antes de validar.
@@ -316,24 +326,24 @@ def parsear_nombre_acorde(nombre: str) -> tuple[str, str]:
     m = re.match(r"^([A-G](?:b|#)?)(.*)$", base)
     if not m:
         raise ValueError(f"Acorde no reconocido: {nombre}")
-    root, suf = m.groups()
+    root_str, suf = m.groups()
     suf = suf or ""
     if suf not in DICCIONARIO_EXTENDIDA:
         raise ValueError(f"Sufijo desconocido: {suf}")
-    return root, suf
+    return NOTA_A_MIDI[root_str], suf
 
 
 def get_bass_pitch_ext(cifrado: str, inversion: str) -> int:
     """Return the MIDI pitch for the bass note of ``cifrado``."""
 
-    root, suf = parsear_nombre_acorde(cifrado)
+    root_pc, suf = parsear_nombre_acorde(cifrado)
     ints = DICCIONARIO_EXTENDIDA[suf]
     if inversion == "root":
-        return NOTA_A_MIDI[root] + 12 * 3
+        return root_pc + 12 * 3
     elif inversion == "third":
-        return (NOTA_A_MIDI[root] + ints[1]) % 12 + 12 * 3
+        return (root_pc + ints[1]) % 12 + 12 * 3
     elif inversion == "fifth":
-        return (NOTA_A_MIDI[root] + ints[2]) % 12 + 12 * 3
+        return (root_pc + ints[2]) % 12 + 12 * 3
     else:
         raise ValueError(f"Inversión desconocida: {inversion}")
 
@@ -436,11 +446,7 @@ def montuno_armonia_extendida(
 ) -> pretty_midi.PrettyMIDI | None:
     """Genera montuno usando las reglas de armonía extendida."""
 
-    from salsa import (
-        seleccionar_inversion,
-        get_bass_pitch,
-        _ajustar_rango_flexible,
-    )
+    from salsa import _ajustar_rango_flexible
     import midi_utils
 
     if asignaciones_custom is None:
@@ -462,15 +468,15 @@ def montuno_armonia_extendida(
         for idx, (cifrado, _, inv_forzado) in enumerate(asignaciones):
             if idx == 0:
                 inv = inv_forzado or inversion_inicial
-                pitch = get_bass_pitch(cifrado, inv)
+                pitch = get_bass_pitch_ext(cifrado, inv)
                 pitch = _ajustar_rango_flexible(voz_grave_anterior, pitch)
             else:
                 if inv_forzado:
                     inv = inv_forzado
-                    pitch = get_bass_pitch(cifrado, inv)
+                    pitch = get_bass_pitch_ext(cifrado, inv)
                     pitch = _ajustar_rango_flexible(voz_grave_anterior, pitch)
                 else:
-                    inv, pitch = seleccionar_inversion(voz_grave_anterior, cifrado)
+                    inv, pitch = seleccionar_inversion_ext(voz_grave_anterior, cifrado)
             inversiones.append(inv)
             offsets.append(0)
             voz_grave_anterior = pitch
