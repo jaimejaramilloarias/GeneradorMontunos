@@ -257,12 +257,17 @@ VOICINGS_EXTENDIDA = {
 }
 
 def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
-    """Convierte ``voicing_pattern`` en notas MIDI absolutas."""
+    """Convierte ``voicing_pattern`` en notas MIDI absolutas.
+
+    ``intervalos`` debe contener las distancias desde la fundamental que
+    definen el acorde (por ejemplo ``[0, 3, 7, 10]`` para ``m7``).  Los
+    elementos de ``voicing_pattern`` indican qué intervalo usar (``n1``,
+    ``n2``, ...), opcionalmente desplazado por octavas con ``+12``.
+    """
 
     base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
-    base_ref = NOTA_A_MIDI['C'] + 12 * octava_base
     resultado = []
-    for token, ref in voicing_pattern:
+    for token, _ in voicing_pattern:
         m = re.match(r"n(\d+)(?:\+(\d+))?", token)
         if not m:
             raise ValueError(f"Patrón inválido: {token}")
@@ -272,9 +277,7 @@ def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
                 f"La plantilla requiere n{idx + 1} pero el acorde solo tiene {len(intervalos)} intervalos"
             )
         extra = int(m.group(2) or 0)
-        ref_pitch = pretty_midi.note_name_to_number(ref)
-        shift = ref_pitch - (base_ref + intervalos[idx] + extra)
-        midi = base_root + intervalos[idx] + extra + shift
+        midi = base_root + intervalos[idx] + extra
         resultado.append(midi)
     return resultado
 
@@ -283,7 +286,6 @@ def get_midi_numbers_debug(base_note, intervalos, voicing_pattern, octava_base=4
     """Como :func:`get_midi_numbers` pero conserva la información de depuración."""
 
     base_root = NOTA_A_MIDI[base_note] + 12 * octava_base
-    base_ref = NOTA_A_MIDI['C'] + 12 * octava_base
     resultado = []
     debug = []
     for token, ref in voicing_pattern:
@@ -292,9 +294,11 @@ def get_midi_numbers_debug(base_note, intervalos, voicing_pattern, octava_base=4
             raise ValueError(f"Patrón inválido: {token}")
         idx = int(m.group(1)) - 1
         extra = int(m.group(2) or 0)
-        ref_pitch = pretty_midi.note_name_to_number(ref)
-        shift = ref_pitch - (base_ref + intervalos[idx] + extra)
-        midi = base_root + intervalos[idx] + extra + shift
+        if idx >= len(intervalos):
+            raise ValueError(
+                f"La plantilla requiere n{idx + 1} pero el acorde solo tiene {len(intervalos)} intervalos"
+            )
+        midi = base_root + intervalos[idx] + extra
         resultado.append(midi)
         debug.append((ref, token, midi))
     return resultado, debug
