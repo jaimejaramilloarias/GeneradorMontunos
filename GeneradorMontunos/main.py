@@ -436,7 +436,6 @@ def generar(
         inv_idx = 0
         for idx, (modo_seg, asign_seg, start_cor, idxs_seg) in enumerate(segmentos):
             funcion = MODOS_DISPONIBLES.get(modo_seg)
-            offset_ref = 0
             if funcion is None:
                 status_var.set(f"Modo no soportado: {modo_seg}")
                 return
@@ -449,7 +448,6 @@ def generar(
                 inversion = limpiar_inversion(inversion_var.get())
                 midi_ref_seg = BASE_DIR / "reference_midi_loops" / f"salsa_{clave_tag_m}_{inversion}_{sufijo}.mid"
                 arg_extra = inversion
-                offset_ref = 0
 
             elif modo_seg == "Armonía extendida":
                 clave_tag_m = cfg["midi_prefix"].split("_")[1]
@@ -460,12 +458,10 @@ def generar(
                     / f"salsa_{clave_tag_m}_{inversion}_2chords.mid"
                 )
                 arg_extra = inversion
-                offset_ref = (seed or 0) % 256
 
             else:
                 midi_ref_seg = BASE_DIR / "reference_midi_loops" / f"{cfg['midi_prefix']}_{variacion}.mid"
                 arg_extra = ARMONIZACION_INV.get(armon_combo.get(), armon_combo.get())
-                offset_ref = 0
 
             if not midi_ref_seg.exists():
                 status_var.set(f"No se encontró {midi_ref_seg}")
@@ -512,7 +508,7 @@ def generar(
                     midi_ref_seg,
                     tmp_path,
                     arg_extra,
-                    inicio_cor=start_cor + offset_ref,
+                    inicio_cor=start_cor,
                     return_pm=False,
                     **kwargs,
                 )
@@ -1345,11 +1341,11 @@ def main():
             def _shift_inv(delta: int, i: int = idx) -> None:
                 _push_state()
                 cur = current_inversions[i]
-                new_val = cur + delta
+                new_val = (cur + delta) % len(INV_ORDER)
                 current_inversions[i] = new_val
-                var_inv.set(label_map[INV_ORDER[new_val % len(INV_ORDER)]])
+                var_inv.set(label_map[INV_ORDER[new_val]])
                 if i == 0:
-                    inversion_var.set(INV_ORDER[current_inversions[0] % len(INV_ORDER)])
+                    inversion_var.set(INV_ORDER[current_inversions[0]])
                     actualizar_midi()
                 _update_text_from_selections()
                 actualizar_visualizacion()
