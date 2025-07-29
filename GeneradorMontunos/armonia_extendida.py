@@ -267,6 +267,10 @@ def get_midi_numbers(base_note, intervalos, voicing_pattern, octava_base=4):
         if not m:
             raise ValueError(f"Patrón inválido: {token}")
         idx = int(m.group(1)) - 1
+        if idx >= len(intervalos):
+            raise ValueError(
+                f"La plantilla requiere n{idx + 1} pero el acorde solo tiene {len(intervalos)} intervalos"
+            )
         extra = int(m.group(2) or 0)
         ref_pitch = pretty_midi.note_name_to_number(ref)
         shift = ref_pitch - (base_ref + intervalos[idx] + extra)
@@ -499,4 +503,5 @@ def montuno_armonia_extendida(
         voicing_offsets=offs,
         parse_fn=parsear_nombre_acorde,
         interval_dict=DICCIONARIO_EXTENDIDA,
+        full_voicing=True,
     )
