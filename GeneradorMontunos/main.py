@@ -760,6 +760,11 @@ def main():
 
 
         texto.text.edit_modified(False)
+        # Reapply syntax highlighting so mode changes update chord colours
+        try:
+            texto.text._highlight()
+        except Exception:
+            pass
 
 
         def _clear():
