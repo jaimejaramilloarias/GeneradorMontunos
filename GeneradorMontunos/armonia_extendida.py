@@ -503,5 +503,7 @@ def montuno_armonia_extendida(
         voicing_offsets=offs,
         parse_fn=parsear_nombre_acorde,
         interval_dict=DICCIONARIO_EXTENDIDA,
-        full_voicing=True,
+        # Use note-by-note replacement so the rhythmic pattern from the
+        # reference template is preserved for each voice.
+        full_voicing=False,
     )
