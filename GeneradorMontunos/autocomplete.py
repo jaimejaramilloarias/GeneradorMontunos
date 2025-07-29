@@ -88,10 +88,15 @@ class ChordAutocomplete(ctk.CTkTextbox):
     # ------------------------------------------------------------------
     @property
     def _suffixes(self) -> List[str]:
-        """Return the list of chord suffixes supported by the app."""
-        modo = get_modo()
-        dic = _SUFFIX_DICTS.get(modo, INTERVALOS_TRADICIONALES)
-        return list(dic.keys())
+        """Return the list of chord suffixes supported by all modes."""
+        seen = set()
+        suffixes: List[str] = []
+        for dic in _SUFFIX_DICTS.values():
+            for suf in dic.keys():
+                if suf not in seen:
+                    seen.add(suf)
+                    suffixes.append(suf)
+        return suffixes
 
     def _current_word(self) -> str:
         """Return the current chord fragment before the cursor."""
