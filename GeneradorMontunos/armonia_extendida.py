@@ -459,4 +459,6 @@ def montuno_armonia_extendida(
         inicio_cor=inicio_cor,
         return_pm=return_pm,
         voicing_offsets=offs,
+        parse_fn=parsear_nombre_acorde,
+        interval_dict=DICCIONARIO_EXTENDIDA,
     )

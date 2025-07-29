@@ -233,8 +233,8 @@ def _arm_decimas_intervalos(
     info: List[Dict] = []
     for data in asignaciones:
         nombre = data[0]
-        root_pc, suf = parsear_nombre_acorde(nombre)
-        ints = INTERVALOS_TRADICIONALES[suf]
+        root_pc, suf = parse_fn(nombre)
+        ints = interval_dict[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
         is_dim7 = suf == "º7"
         info.append(
@@ -369,8 +369,8 @@ def _arm_treceavas_intervalos(
     info: List[Dict] = []
     for data in asignaciones:
         nombre = data[0]
-        root_pc, suf = parsear_nombre_acorde(nombre)
-        ints = INTERVALOS_TRADICIONALES[suf]
+        root_pc, suf = parse_fn(nombre)
+        ints = interval_dict[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
         is_dim7 = suf == "º7"
         info.append(
@@ -502,6 +502,8 @@ def generar_notas_mixtas(
     *,
     notas_base: List[int] = NOTAS_BASE,
     debug: bool = False,
+    parse_fn=parsear_nombre_acorde,
+    interval_dict=INTERVALOS_TRADICIONALES,
 ) -> List[pretty_midi.Note]:
     """Generate notes applying per-chord harmonisation.
 
@@ -520,8 +522,8 @@ def generar_notas_mixtas(
     info: List[Dict] = []
     for data in asignaciones:
         nombre = data[0]
-        root_pc, suf = parsear_nombre_acorde(nombre)
-        ints = INTERVALOS_TRADICIONALES[suf]
+        root_pc, suf = parse_fn(nombre)
+        ints = interval_dict[suf]
         is_sixth = suf.endswith("6") and "7" not in suf
         is_dim7 = suf == "º7"
         info.append(
@@ -741,6 +743,8 @@ def exportar_montuno(
     return_pm: bool = False,
     aleatorio: bool = False,
     voicing_offsets: Optional[List[int]] = None,
+    parse_fn=parsear_nombre_acorde,
+    interval_dict=INTERVALOS_TRADICIONALES,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
@@ -802,7 +806,14 @@ def exportar_montuno(
         ]
 
     nuevas_notas = generar_notas_mixtas(
-        posiciones, voicings, asignaciones, grid, notas_base=notas_base, debug=debug
+        posiciones,
+        voicings,
+        asignaciones,
+        grid,
+        notas_base=notas_base,
+        debug=debug,
+        parse_fn=parse_fn,
+        interval_dict=interval_dict,
     )
 
     # Avoid overlapping notes at the same pitch which can cause MIDI
