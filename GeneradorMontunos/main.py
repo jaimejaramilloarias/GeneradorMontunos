@@ -1343,9 +1343,10 @@ def main():
                 cur = current_inversions[i]
                 new_val = (cur + delta) % len(INV_ORDER)
                 current_inversions[i] = new_val
-                var_inv.set(label_map[INV_ORDER[new_val]])
-                if i == 0:
-                    inversion_var.set(INV_ORDER[current_inversions[0]])
+                inv_name = INV_ORDER[new_val]
+                var_inv.set(label_map[inv_name])
+                if i == 0 or get_modo() == "Armonía extendida":
+                    inversion_var.set(inv_name)
                     actualizar_midi()
                 _update_text_from_selections()
                 actualizar_visualizacion()
