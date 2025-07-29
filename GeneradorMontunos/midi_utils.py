@@ -787,7 +787,6 @@ def exportar_montuno(
     parse_fn=parsear_nombre_acorde,
     interval_dict=INTERVALOS_TRADICIONALES,
     full_voicing: bool = False,
-    dummy_pitch: int = 21,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
@@ -797,9 +796,7 @@ def exportar_montuno(
     should be duplicated.  Set ``return_pm`` to ``True`` to return the
     generated object instead of writing it to disk.  When ``full_voicing`` is
     ``True`` the complete list of pitches for each voicing is inserted at
-    every eighth-note position instead of mapping notes one by one. ``dummy_pitch``
-    specifies the MIDI pitch used for placeholder notes added at the beginning
-    and end when the pattern would otherwise start or finish with silence.
+    every eighth-note position instead of mapping notes one by one.
     """
     notes, pm = leer_midi_referencia(midi_referencia_path)
     posiciones_base, notas_base = obtener_posiciones_referencia(notes)
@@ -888,7 +885,7 @@ def exportar_montuno(
             nuevas_notas.append(
                 pretty_midi.Note(
                     velocity=1,
-                    pitch=dummy_pitch,
+                    pitch=21,
                     start=0.0,
                     end=min(grid, limite),
                 )
@@ -897,7 +894,7 @@ def exportar_montuno(
             nuevas_notas.append(
                 pretty_midi.Note(
                     velocity=1,
-                    pitch=dummy_pitch,
+                    pitch=21,
                     start=max(0.0, limite - grid),
                     end=limite,
                 )

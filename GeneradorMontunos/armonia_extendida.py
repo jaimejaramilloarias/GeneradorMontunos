@@ -3,15 +3,9 @@
 from pathlib import Path
 import re
 import pretty_midi
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, List
 
 from salsa import SALTO_MAX, _ajustar_rango_flexible
-from midi_common import obtener_posiciones_referencia
-from midi_utils import (
-    _grid_and_bpm,
-    _cortar_notas_superpuestas,
-    _recortar_notas_a_limite,
-)
 
 # Mapeo de nombres de nota a su clase de tono MIDI
 NOTA_A_MIDI = {
@@ -374,55 +368,6 @@ def seleccionar_inversion_ext(anterior: Optional[int], cifrado: str) -> Tuple[st
     return mejor[1], mejor[2]
 
 
-def _extraer_grupos(posiciones_base: List[dict], total_cor_ref: int, grid_seg: float) -> List[List[dict]]:
-    """Agrupa ``posiciones_base`` por corchea."""
-
-    grupos_ref: List[List[dict]] = [[] for _ in range(total_cor_ref)]
-    for pos in posiciones_base:
-        idx = int(round(pos["start"] / grid_seg))
-        if 0 <= idx < total_cor_ref:
-            grupos_ref[idx].append(
-                {
-                    "pitch": pos["pitch"],
-                    "start": pos["start"] - idx * grid_seg,
-                    "end": pos["end"] - idx * grid_seg,
-                    "velocity": pos["velocity"],
-                }
-            )
-
-    return grupos_ref
-
-
-def _cargar_grupos_por_inversion_ext(
-    plantillas: dict,
-) -> Tuple[dict, List[int], Dict[str, int], int, float, float]:
-    """Devuelve notas agrupadas por corchea para cada inversión."""
-
-    grupos_por_inv: Dict[str, List[List[Dict]]] = {}
-    total_cor_ref = None
-    grid = bpm = None
-    notas_base_set: set[int] = set()
-    offsets: Dict[str, int] = {}
-    base_root: List[int] | None = None
-    for inv, pm in plantillas.items():
-        cor_ref, g, b = _grid_and_bpm(pm)
-        if grid is None:
-            grid = g
-            bpm = b
-            total_cor_ref = cor_ref
-        notes = pm.instruments[0].notes
-        posiciones_base, base = obtener_posiciones_referencia(notes)
-        notas_base_set.update(base)
-        if base_root is None:
-            base_root = base
-            offsets[inv] = 0
-        else:
-            offsets[inv] = base[0] - base_root[0]
-        grupos_por_inv[inv] = _extraer_grupos(posiciones_base, cor_ref, grid)
-
-    return grupos_por_inv, sorted(notas_base_set), offsets, total_cor_ref, grid, bpm
-
-
 def procesar_progresion(texto: str, *, inicio_cor: int = 0):
     """Analiza la progresión y asigna corcheas a cada acorde."""
 
@@ -557,107 +502,20 @@ def montuno_armonia_extendida(
     if voicing_offsets is not None:
         offs = voicing_offsets
 
-    # --------------------------------------------------------------
-    # Carga de las plantillas por inversión y construcción de grupos
-    # --------------------------------------------------------------
-    parts = midi_ref.stem.split("_")
-    base = "_".join(parts[:2]) if len(parts) >= 2 else midi_ref.stem
-    plantillas = {}
-    for inv in ["root", "third", "fifth"]:
-        path = midi_ref.parent / f"{base}_{inv}_2chords.mid"
-        plantillas[inv] = pretty_midi.PrettyMIDI(str(path))
-
-    grupos_por_inv, notas_base, offsets_inv, total_ref_cor, grid, bpm = _cargar_grupos_por_inversion_ext(plantillas)
-
-    total_dest_cor = max(i for _, idxs, _ in asignaciones for i in idxs) + 1
-
-    mapa: Dict[int, int] = {}
-    limites: Dict[int, int] = {}
-    for i, (_, idxs, _) in enumerate(asignaciones):
-        for ix in idxs:
-            mapa[ix] = i
-        limites[i] = idxs[-1] + 1
-
-    inv_por_cor: Dict[int, str] = {}
-    for idx, (_, idxs, _) in enumerate(asignaciones):
-        for ix in idxs:
-            inv_por_cor[ix] = inversiones[idx]
-
-    posiciones: List[dict] = []
-    for cor in range(total_dest_cor):
-        inv = inv_por_cor.get(cor)
-        if inv is None:
-            continue
-        ref_idx = (inicio_cor + cor) % total_ref_cor
-        idx_acorde = mapa[cor]
-        limite_cor = limites[idx_acorde]
-        for pos in grupos_por_inv[inv][ref_idx]:
-            inicio = cor * grid + pos["start"]
-            fin = cor * grid + pos["end"]
-            end = min(fin, limite_cor * grid)
-            if end <= inicio:
-                continue
-            posiciones.append(
-                {
-                    "pitch": pos["pitch"] - offsets_inv.get(inv, 0),
-                    "start": inicio,
-                    "end": end,
-                    "velocity": pos["velocity"],
-                }
-            )
-
-    if offs:
-        voicings = [
-            [p + offs[i] for p in v] for i, v in enumerate(voicings)
-        ]
-
-    notas_finales = midi_utils.generar_notas_mixtas(
-        posiciones,
+    return midi_utils.exportar_montuno(
+        midi_ref,
         voicings,
         asign_simple,
-        grid,
-        notas_base=notas_base,
+        compases,
+        output,
+        inicio_cor=inicio_cor,
+        return_pm=return_pm,
+        voicing_offsets=offs,
+        # Always traverse the reference sequentially as in the other modes
+        aleatorio=False,
         parse_fn=parsear_nombre_acorde,
         interval_dict=DICCIONARIO_EXTENDIDA,
+        # Use note-by-note replacement so the rhythmic pattern from the
+        # reference template is preserved for each voice.
+        full_voicing=False,
     )
-
-    limite = total_dest_cor * grid
-    notas_finales = _cortar_notas_superpuestas(notas_finales)
-    notas_finales = _recortar_notas_a_limite(notas_finales, limite)
-    if limite > 0:
-        has_start = any(n.start <= 0 < n.end and n.pitch > 0 for n in notas_finales)
-        has_end = any(
-            n.pitch > 0 and n.start < limite and n.end > limite - grid for n in notas_finales
-        )
-        if not has_start:
-            notas_finales.append(
-                pretty_midi.Note(
-                    velocity=1,
-                    pitch=0,
-                    start=0.0,
-                    end=min(grid, limite),
-                )
-            )
-        if not has_end:
-            notas_finales.append(
-                pretty_midi.Note(
-                    velocity=1,
-                    pitch=0,
-                    start=max(0.0, limite - grid),
-                    end=limite,
-                )
-            )
-
-    pm_out = pretty_midi.PrettyMIDI()
-    inst = pretty_midi.Instrument(
-        program=plantillas["root"].instruments[0].program,
-        is_drum=plantillas["root"].instruments[0].is_drum,
-        name=plantillas["root"].instruments[0].name,
-    )
-    inst.notes = notas_finales
-    pm_out.instruments.append(inst)
-    if return_pm:
-        return pm_out
-
-    pm_out.write(str(output))
-    return None
