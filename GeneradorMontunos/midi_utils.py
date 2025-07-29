@@ -605,8 +605,14 @@ def generar_notas_mixtas(
             else:  # treceavas
                 notas = [base + 12, agregada - 24]
         else:
-            # Procesamiento estandar del voicing base
+            # Procesamiento estándar del voicing base. ``notas_base`` puede
+            # contener más entradas que las presentes en ``voicing`` cuando
+            # las plantillas incluyen notas adicionales.  Asegura que el
+            # índice calculado no exceda la longitud del voicing para evitar
+            # ``IndexError``.
             orden = notas_base.index(pos["pitch"])
+            if orden >= len(voicing):
+                orden %= len(voicing)
             base_pitch = voicing[orden]
 
             if arm == "octavas":
