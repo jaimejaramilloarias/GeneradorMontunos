@@ -6,11 +6,22 @@ from tkinter import Listbox, END, ACTIVE
 from typing import List, Optional
 import re
 
-from voicings import INTERVALOS_TRADICIONALES, NOTAS, parsear_nombre_acorde as parsear_nombre_acorde_trad
+from voicings import (
+    INTERVALOS_TRADICIONALES,
+    NOTAS,
+    parsear_nombre_acorde as parsear_nombre_acorde_trad,
+)
 from armonia_extendida import (
     DICCIONARIO_EXTENDIDA,
     parsear_nombre_acorde as parsear_nombre_acorde_ext,
 )
+
+# Mapping of mode names to the corresponding suffix dictionary
+_SUFFIX_DICTS = {
+    "Tradicional": INTERVALOS_TRADICIONALES,
+    "Salsa": INTERVALOS_TRADICIONALES,
+    "Armonía extendida": DICCIONARIO_EXTENDIDA,
+}
 
 # Placeholder replaced by :func:`main.get_modo` at runtime
 def get_modo() -> str:
@@ -78,9 +89,9 @@ class ChordAutocomplete(ctk.CTkTextbox):
     @property
     def _suffixes(self) -> List[str]:
         """Return the list of chord suffixes supported by the app."""
-        if get_modo() == "Armonía extendida":
-            return list(DICCIONARIO_EXTENDIDA.keys())
-        return list(INTERVALOS_TRADICIONALES.keys())
+        modo = get_modo()
+        dic = _SUFFIX_DICTS.get(modo, INTERVALOS_TRADICIONALES)
+        return list(dic.keys())
 
     def _current_word(self) -> str:
         """Return the current chord fragment before the cursor."""
