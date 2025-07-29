@@ -1342,6 +1342,7 @@ def main():
                 cur = current_inversions[i]
                 current_inversions[i] = cur + delta
                 var_inv.set(label_map[INV_ORDER[current_inversions[i] % len(INV_ORDER)]])
+                _update_text_from_selections()
                 actualizar_visualizacion()
 
             # All widgets go through _register_widget to ensure proper cleanup
@@ -1377,6 +1378,7 @@ def main():
                     # When only one chord exists, update the global mode so
                     # it persists for new chords entered later.
                     modo_combo.set(MODOS_LABELS[nuevo_modo])
+                _update_text_from_selections()
                 actualizar_visualizacion()
 
 
@@ -1410,6 +1412,7 @@ def main():
                                 break
                         for j in range(i, next_change):
                             chord_armos[j] = nueva_arm
+                    _update_text_from_selections()
                     actualizar_visualizacion()
 
                 # Arm menus are dynamic; ensure they are registered as well
