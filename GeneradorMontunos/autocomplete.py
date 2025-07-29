@@ -140,13 +140,14 @@ class ChordAutocomplete(ctk.CTkTextbox):
         if self._popup is None:
             self._popup = ctk.CTkToplevel(self)
             self._popup.wm_overrideredirect(True)
-            self._listbox = Listbox(self._popup, height=6)
+            self._listbox = Listbox(self._popup)
             self._listbox.pack()
             self._listbox.bind("<ButtonRelease-1>", self._on_select)
         else:
             self._listbox.delete(0, END)
 
         self._listbox.delete(0, END)
+        self._listbox.configure(height=len(suggestions))
         for s in suggestions:
             self._listbox.insert(END, s)
         self._listbox.select_set(0)
