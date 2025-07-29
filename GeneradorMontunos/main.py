@@ -84,9 +84,11 @@ MODOS_INV = {v: k for k, v in MODOS_LABELS.items()}
 # Regular expressions compiled once for efficiency
 # ---------------------------------------------------------------------------
 CHORD_RE = re.compile(
-    r"(?<![A-Za-z0-9#bº°+∆m7(b5)])([A-G](?:b|#)?[a-zA-Z0-9º°+∆m7(b5)]*(?:\([^)]*\))*)"
+    r"(?<![A-Za-z0-9#bº°ø+∆/])([A-G](?:b|#)?[A-Za-z0-9º°ø+#b∆/]*(?:\([^)]*\))*)"
 )
-CHORD_CURSOR_RE = re.compile(r"(?:^|[\s|])([A-G](?:b|#)?[A-Za-z0-9º°+∆]*(?:\([^)]*\))*)")
+CHORD_CURSOR_RE = re.compile(
+    r"(?:^|[\s|])([A-G](?:b|#)?[A-Za-z0-9º°ø+#b∆/]*(?:\([^)]*\))*)"
+)
 
 # Width in pixels for each eighth-note cell in the piano roll
 CELL_WIDTH = 40
@@ -1350,6 +1352,10 @@ def main():
                         chord_armos[j] = "Octavas"
                     elif nuevo_modo == "Tradicional":
                         chord_armos[j] = "Octavas"
+                if n == 1 and i == 0:
+                    # When only one chord exists, update the global mode so
+                    # it persists for new chords entered later.
+                    modo_combo.set(MODOS_LABELS[nuevo_modo])
                 actualizar_visualizacion()
 
 
