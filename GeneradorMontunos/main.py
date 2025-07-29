@@ -1341,10 +1341,11 @@ def main():
             def _shift_inv(delta: int, i: int = idx) -> None:
                 _push_state()
                 cur = current_inversions[i]
-                current_inversions[i] = cur + delta
-                var_inv.set(label_map[INV_ORDER[current_inversions[i] % len(INV_ORDER)]])
+                new_val = (cur + delta) % len(INV_ORDER)
+                current_inversions[i] = new_val
+                var_inv.set(label_map[INV_ORDER[new_val]])
                 if i == 0:
-                    inversion_var.set(INV_ORDER[current_inversions[0] % len(INV_ORDER)])
+                    inversion_var.set(INV_ORDER[current_inversions[0]])
                     actualizar_midi()
                 _update_text_from_selections()
                 actualizar_visualizacion()
