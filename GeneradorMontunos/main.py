@@ -45,6 +45,7 @@ from autocomplete import ChordAutocomplete
 import midi_utils
 import midi_utils_tradicional
 import salsa
+import armonia_extendida
 import style_utils
 from utils import (
     limpiar_inversion,
@@ -724,13 +725,33 @@ def main():
     inversion_var.trace_add("write", lambda *a: (_update_text_from_selections(), actualizar_midi()))
 
     def _calc_default_inversions(asig):
-        return calc_default_inversions(
-            asig,
-            inversion_var.get,
-            salsa.get_bass_pitch,
-            salsa._ajustar_rango_flexible,
-            salsa.seleccionar_inversion,
-        )
+        invs: List[str] = []
+        voz: Optional[int] = None
+        for idx, data in enumerate(asig):
+            cif = data[0]
+            inv_for = data[3] if len(data) > 3 else None
+            modo = chord_styles[idx] if idx < len(chord_styles) else get_modo()
+            if modo == "Armonía extendida":
+                get_pitch = armonia_extendida.get_bass_pitch_ext
+                sel_inv = armonia_extendida.seleccionar_inversion_ext
+            else:
+                get_pitch = salsa.get_bass_pitch
+                sel_inv = salsa.seleccionar_inversion
+
+            if idx == 0:
+                inv = inv_for or limpiar_inversion(inversion_var.get())
+                pitch = get_pitch(cif, inv)
+                pitch = salsa._ajustar_rango_flexible(voz, pitch)
+            else:
+                if inv_for:
+                    inv = inv_for
+                    pitch = get_pitch(cif, inv)
+                    pitch = salsa._ajustar_rango_flexible(voz, pitch)
+                else:
+                    inv, pitch = sel_inv(voz, cif)
+            invs.append(inv)
+            voz = pitch
+        return invs
 
 
     def _normalise_bars(text: str) -> str:
