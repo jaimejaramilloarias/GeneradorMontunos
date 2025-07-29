@@ -412,12 +412,12 @@ def _cargar_grupos_por_inversion_ext(
             total_cor_ref = cor_ref
         notes = pm.instruments[0].notes
         posiciones_base, base = obtener_posiciones_referencia(notes)
-        notas_base_set.update(base)
         if base_root is None:
             base_root = base
             offsets[inv] = 0
         else:
             offsets[inv] = base[0] - base_root[0]
+        notas_base_set.update(n - offsets[inv] for n in base)
         grupos_por_inv[inv] = _extraer_grupos(posiciones_base, cor_ref, grid)
 
     return grupos_por_inv, sorted(notas_base_set), offsets, total_cor_ref, grid, bpm
