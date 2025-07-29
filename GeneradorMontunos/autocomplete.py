@@ -254,6 +254,11 @@ class ChordAutocomplete(ctk.CTkTextbox):
             frag = self._current_word()
             self.delete(f"insert-{len(frag)}c", "insert")
             self.insert("insert", choice)
+            # mark the text as modified so external handlers refresh the view
+            try:
+                self.edit_modified(True)
+            except Exception:
+                pass
         self._hide_popup()
         self.focus_set()
         self._highlight()
