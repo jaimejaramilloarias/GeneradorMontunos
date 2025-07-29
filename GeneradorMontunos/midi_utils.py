@@ -652,6 +652,47 @@ def generar_notas_mixtas(
     return resultado
 
 
+def generar_notas_voicing_completo(
+    posiciones: List[dict],
+    voicings: List[List[int]],
+    asignaciones: List[Tuple[str, List[int], str]],
+    grid_seg: float,
+    *,
+    debug: bool = False,
+) -> List[pretty_midi.Note]:
+    """Generate notes reproducing each voicing in full for every eighth note."""
+
+    mapa: Dict[int, int] = {}
+    for i, (_, idxs, _) in enumerate(asignaciones):
+        for ix in idxs:
+            mapa[ix] = i
+
+    primer_evento: Dict[int, dict] = {}
+    for pos in posiciones:
+        cor = int(round(pos["start"] / grid_seg))
+        if cor not in primer_evento or pos["start"] < primer_evento[cor]["start"]:
+            primer_evento[cor] = pos
+
+    resultado: List[pretty_midi.Note] = []
+    for cor, idx in mapa.items():
+        pos = primer_evento.get(cor)
+        if pos is None:
+            continue
+        for pitch in voicings[idx]:
+            resultado.append(
+                pretty_midi.Note(
+                    velocity=pos["velocity"],
+                    pitch=pitch,
+                    start=pos["start"],
+                    end=pos["end"],
+                )
+            )
+        if debug:
+            logger.debug("Corchea %s -> %s", cor, voicings[idx])
+
+    return resultado
+
+
 def aplicar_armonizacion(
     notas: List[pretty_midi.Note], opcion: str
 ) -> List[pretty_midi.Note]:
@@ -745,16 +786,17 @@ def exportar_montuno(
     voicing_offsets: Optional[List[int]] = None,
     parse_fn=parsear_nombre_acorde,
     interval_dict=INTERVALOS_TRADICIONALES,
+    full_voicing: bool = False,
 ) -> Optional[pretty_midi.PrettyMIDI]:
     """Generate a new MIDI file with the given voicings.
 
     The resulting notes are trimmed so the output stops after the last
     eighth-note of the progression. ``inicio_cor`` is the global eighth-note
-    index where this segment begins and is used to align the reference
-    template so all segments stay perfectly in sync. ``armonizacion``
-    specifies how notes should be duplicated (for example, in octaves).
-    Set ``return_pm`` to ``True`` to return the generated object instead of
-    writing it to disk.
+    index where this segment begins.  ``armonizacion`` specifies how notes
+    should be duplicated.  Set ``return_pm`` to ``True`` to return the
+    generated object instead of writing it to disk.  When ``full_voicing`` is
+    ``True`` the complete list of pitches for each voicing is inserted at
+    every eighth-note position instead of mapping notes one by one.
     """
     notes, pm = leer_midi_referencia(midi_referencia_path)
     posiciones_base, notas_base = obtener_posiciones_referencia(notes)
@@ -805,16 +847,21 @@ def exportar_montuno(
             for i, v in enumerate(voicings)
         ]
 
-    nuevas_notas = generar_notas_mixtas(
-        posiciones,
-        voicings,
-        asignaciones,
-        grid,
-        notas_base=notas_base,
-        debug=debug,
-        parse_fn=parse_fn,
-        interval_dict=interval_dict,
-    )
+    if full_voicing:
+        nuevas_notas = generar_notas_voicing_completo(
+            posiciones, voicings, asignaciones, grid, debug=debug
+        )
+    else:
+        nuevas_notas = generar_notas_mixtas(
+            posiciones,
+            voicings,
+            asignaciones,
+            grid,
+            notas_base=notas_base,
+            debug=debug,
+            parse_fn=parse_fn,
+            interval_dict=interval_dict,
+        )
 
     # Avoid overlapping notes at the same pitch which can cause MIDI
     # artefacts by trimming preceding notes when necessary.
