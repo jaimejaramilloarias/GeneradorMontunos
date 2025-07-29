@@ -3,6 +3,9 @@
 from pathlib import Path
 import re
 import pretty_midi
+from typing import Optional, Tuple, List
+
+from salsa import SALTO_MAX, _ajustar_rango_flexible
 
 # Mapeo de nombres de nota a su clase de tono MIDI
 NOTA_A_MIDI = {
@@ -310,6 +313,41 @@ def parsear_nombre_acorde(nombre: str) -> tuple[str, str]:
     if suf not in DICCIONARIO_EXTENDIDA:
         raise ValueError(f"Sufijo desconocido: {suf}")
     return root, suf
+
+
+def get_bass_pitch_ext(cifrado: str, inversion: str) -> int:
+    """Return the MIDI pitch for the bass note of ``cifrado``."""
+
+    root, suf = parsear_nombre_acorde(cifrado)
+    ints = DICCIONARIO_EXTENDIDA[suf]
+    if inversion == "root":
+        return NOTA_A_MIDI[root] + 12 * 3
+    elif inversion == "third":
+        return (NOTA_A_MIDI[root] + ints[1]) % 12 + 12 * 3
+    elif inversion == "fifth":
+        return (NOTA_A_MIDI[root] + ints[2]) % 12 + 12 * 3
+    else:
+        raise ValueError(f"Inversión desconocida: {inversion}")
+
+
+def seleccionar_inversion_ext(anterior: Optional[int], cifrado: str) -> Tuple[str, int]:
+    """Choose the inversion with the smallest leap from ``anterior``."""
+
+    mejores: List[Tuple[int, str, int]] = []
+    for inv in ["root", "third", "fifth"]:
+        pitch = get_bass_pitch_ext(cifrado, inv)
+        pitch = _ajustar_rango_flexible(anterior, pitch)
+        distancia = 0 if anterior is None else abs(pitch - anterior)
+        mejores.append((distancia, inv, pitch))
+
+    mejores.sort()
+    mejor = mejores[0]
+    if anterior is not None and mejor[2] == anterior:
+        for opcion in mejores[1:]:
+            dist, inv, pitch = opcion
+            if dist <= SALTO_MAX and pitch != anterior:
+                return inv, pitch
+    return mejor[1], mejor[2]
 
 
 def procesar_progresion(texto: str, *, inicio_cor: int = 0):
